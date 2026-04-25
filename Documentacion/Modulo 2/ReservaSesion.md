@@ -25,3 +25,5 @@
 - [] La reserva se crea con estado CONFIRMADA.
 
 - [] El sistema retorna idReserva, estado y fechaHora confirmada.
+
+-[]
