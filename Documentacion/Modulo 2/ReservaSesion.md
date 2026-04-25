@@ -14,6 +14,14 @@
 
 ## Criterios de Aceptación
 
+### 1. Validaciones de negocio
+
 - [] Solo se puede reservar en horarios dentro del rango declarado por el entrenador.
 
 - [] El cliente debe tener suscripción activa y mensualidad al día para reservar.
+
+### 2.Estado de la reserva
+
+- [] La reserva se crea con estado CONFIRMADA.
+
+- [] El sistema retorna idReserva, estado y fechaHora confirmada.
