@@ -1,4 +1,4 @@
-## [HU-11] Procesar factura electrónica
+## [HU-10] Procesar factura electrónica
 
 ### 📖 Historia de usuario
 
