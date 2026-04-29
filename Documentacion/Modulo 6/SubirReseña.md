@@ -1,4 +1,4 @@
-## [HU-19] Subir reseña al entrenador
+## [HU-18] Subir reseña al entrenador
 
 ### 📖 Historia de usuario
 

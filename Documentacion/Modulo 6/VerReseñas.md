@@ -1,4 +1,4 @@
-## [HU-20] Ver reseñas y calificaciones del entrenador
+## [HU-19] Ver reseñas y calificaciones del entrenador
 
 ### 📖 Historia de usuario
 

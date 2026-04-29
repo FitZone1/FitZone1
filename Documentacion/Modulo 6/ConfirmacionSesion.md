@@ -1,4 +1,4 @@
-## [HU-21] Confirmación de sesión
+## [HU-20] Confirmación de sesión
 
 ### 📖 Historia de usuario
 
