@@ -1,2 +1,21 @@
-
+# Entorno virtual
 venv/
+
+# Variables de entorno
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Base de datos
+*.db
+*.sqlite3
+
+# VS Code
+.vscode/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
