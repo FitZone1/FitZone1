@@ -1,4 +1,4 @@
-## [HU-01] Registro como cliente
+## Registro como cliente
 
 ### 📖 Historia de usuario
 
