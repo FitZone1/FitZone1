@@ -3,7 +3,7 @@
 # Solo manipula datos. Sin lógica de negocio aquí.
 # ─────────────────────────────────────────────────────────────
 
-from FitZone1.app.domain.cliente.cliente_domain import Cliente
+from app.domain.cliente_domain import Cliente
 from typing import Optional
 
 class ClienteRepository:
