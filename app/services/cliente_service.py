@@ -1,4 +1,4 @@
-from FitZone1.app.domain.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
+from app.domain.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
 from app.respository.cliente_repositories import ClienteRepository
 
 
