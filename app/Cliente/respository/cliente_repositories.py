@@ -6,7 +6,6 @@
 from domain.cliente_domain import Cliente
 from typing import Optional
 
-
 class ClienteRepository:
 
     def __init__(self):

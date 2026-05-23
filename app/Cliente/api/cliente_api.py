@@ -1,45 +1,95 @@
-from typing import List
-from fastapi import APIRouter, status
+# ─────────────────────────────────────────────────────────────
+# CAPA API — rutas HTTP con FastAPI
+# Solo recibe peticiones y llama al servicio.
+# Aquí NO hay lógica de negocio.
+# ─────────────────────────────────────────────────────────────
 
-from domain.cliente_domain import Cliente, ClienteCreate
+from fastapi import APIRouter, HTTPException, status
+from domain.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
+from respository.cliente_repositories import ClienteRepository, cliente_repository 
 from services.cliente_service import ClienteService
-from respository.cliente_repositories import ClienteRepository
 
-
-# Instancias (en producción usarías DI de FastAPI)
-repo = ClienteRepository()
-service = ClienteService(repo)
-
-# Router: agrupa endpoints bajo un prefijo
-router = APIRouter(prefix="/cliente", tags=["cliente"])
-
-
-@router.get("/", response_model=List[Cliente])
-def list_cliente():
-    """Devuelve todos los clientes."""
-    return service.get_all_cliente()
-
-
-@router.get("/{cliente_id}", response_model=Cliente)
-def get_cliente(cliente_id: int):
-    """Devuelve un producto por su ID."""
-    return service.get_product(cliente_id)
-
-
-@router.post(
-    "/",
-    response_model=Cliente,
-    status_code=status.HTTP_201_CREATED
+# Crear el router con prefijo y etiqueta para la documentación
+router = APIRouter(
+    prefix="/api/v1/auth",
+    tags=["Registro Cliente"],
 )
-def create_cliente(data: ClienteCreate):
-    """Crea un nuevo cliente."""
-    return service.create_cliente(data)
+
+# Instanciar el servicio con inyección del repositorio
+service = ClienteService(repo=cliente_repository)
 
 
-@router.delete(
-    "/{cliente_id}",
-    status_code=status.HTTP_200_OK
-)
-def delete_cliente(cliente_id: int):
+# ── POST /api/v1/auth/registro ────────────────────────────────
+@router.post("/registro", response_model=RegistroClienteResponse,
+             status_code=status.HTTP_201_CREATED)
+def registrar_cliente(datos: RegistroClienteCreate):
+    """Registra un nuevo cliente. El estado inicial es PENDIENTE hasta verificar correo."""
+    try:
+        # En producción la contraseña se hashea aquí antes de pasar al servicio
+        contrasena_hash = f"hashed_{datos.contrasena}"
+        return service.registrar(datos, contrasena_hash)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(e)
+        )
+
+
+# ── GET /api/v1/auth/clientes ─────────────────────────────────
+@router.get("/clientes", response_model=list[RegistroClienteResponse])
+def listar_clientes():
+    """Retorna todos los clientes registrados."""
+    return service.listar()
+
+
+# ── GET /api/v1/auth/clientes/{id} ───────────────────────────
+@router.get("/clientes/{id}", response_model=RegistroClienteResponse)
+def obtener_cliente(id: int):
+    """Retorna un cliente por su ID."""
+    try:
+        return service.obtener(id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+# ── PATCH /api/v1/auth/clientes/{id}/activar ─────────────────
+@router.patch("/clientes/{id}/activar", response_model=RegistroClienteResponse)
+def activar_cuenta(id: int):
+    """Activa la cuenta del cliente tras verificar su correo electrónico."""
+    try:
+        return service.activar_cuenta(id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+
+# ── DELETE /api/v1/auth/clientes/{id} ────────────────────────
+@router.delete("/clientes/{id}")
+def eliminar_cliente(id: int):
     """Elimina un cliente por su ID."""
-    return service.delete_product(cliente_id)
+    try:
+        return service.eliminar(id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+# ── GET /api/v1/auth/clientes/estado/{estado} ────────────────
+@router.get("/clientes/estado/{estado}",
+            response_model=list[RegistroClienteResponse])
+def clientes_por_estado(estado: str):
+    """Filtra clientes por estado (PENDIENTE, ACTIVO, INACTIVO)."""
+    try:
+        return service.por_estado(estado)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
