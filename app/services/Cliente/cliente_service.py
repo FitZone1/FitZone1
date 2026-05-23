@@ -1,5 +1,5 @@
-from app.domain.Cliente.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
-from app.respository.Cliente.cliente_repositories import ClienteRepository
+from domain.Cliente.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
+from respository.Cliente.cliente_repositories import ClienteRepository
 
 
 class ClienteService:

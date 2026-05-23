@@ -7,7 +7,7 @@
 from fastapi import APIRouter, HTTPException, status
 from domain.Entrenador.Entrenador_domain import RegistroEntrenadorCreate, RegistroEntrenadorResponse
 from services.Entrenador.Entrenador_services import EntrenadorService
-from repository.Entrenador.Entrenador_repository import entrenador_repository
+from respository.Entrenador.Entrenador_repository import entrenador_repository
 
 # Crear el router con prefijo y etiqueta para la documentación
 router = APIRouter(

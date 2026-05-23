@@ -1,5 +1,5 @@
 from domain.Entrenador.Entrenador_domain import RegistroEntrenadorCreate, RegistroEntrenadorResponse
-from repository.Entrenador.Entrenador_repository import EntrenadorRepository
+from respository.Entrenador.Entrenador_repository import EntrenadorRepository
 
 
 class EntrenadorService:

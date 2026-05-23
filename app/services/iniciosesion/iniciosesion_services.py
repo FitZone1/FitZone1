@@ -1,7 +1,7 @@
-from app.domain.iniciosesion.iniciosesion_domain import InicioSesionCreate, InicioSesionResponse, Sesion
-from app.respository.iniciosesion.iniciosesion_repositories import SesionRepository
-from app.services.Cliente.cliente_service import ClienteRepository
-from app.respository import EntrenadorRepository
+from domain.iniciosesion.iniciosesion_domain import InicioSesionCreate, InicioSesionResponse, Sesion
+from respository.iniciosesion.iniciosesion_repositories import SesionRepository
+from services.Cliente.cliente_service import ClienteRepository
+from respository import EntrenadorRepository
 
 
 class SesionService:

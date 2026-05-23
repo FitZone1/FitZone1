@@ -3,7 +3,7 @@
 # Solo manipula datos. Sin lógica de negocio aquí.
 # ─────────────────────────────────────────────────────────────
 
-from app.domain.iniciosesion import Sesion
+from domain.iniciosesion import Sesion
 from typing import Optional
 
 
