@@ -5,9 +5,9 @@
 # ─────────────────────────────────────────────────────────────
 
 from fastapi import APIRouter, HTTPException, status
-from app.domain.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
-from app.respository.cliente_repositories import ClienteRepository, cliente_repository
-from app.services.cliente_service import ClienteService
+from FitZone1.app.domain.cliente.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
+from FitZone1.app.respository.cliente.cliente_repositories import ClienteRepository, cliente_repository
+from FitZone1.app.services.cliente.cliente_service import ClienteService
 # Crear el router con prefijo y etiqueta para la documentación
 router = APIRouter(
     prefix="/api/v1/auth",
