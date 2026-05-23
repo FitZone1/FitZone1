@@ -44,7 +44,7 @@ class RegistroClienteResponse(BaseModel):
     idUsuario: int
     nombre:    str
     rol:       str   # siempre "CLIENTE"
-    estado:    str   # "PENDIENTE" hasta verificar correo
+    estado:    str   # "INACTIVO" hasta verificar correo
 
     class Config:
         from_attributes = True
@@ -56,13 +56,13 @@ class Cliente:
 
     def __init__(self, id: int, nombre: str, correo: str,
                  telefono: str, contrasena: str,
-                 estado: str = "PENDIENTE"):
+                 estado: str = "INACTIVO"):
         self.id               = id
         self.nombre           = nombre
         self.correo           = correo
         self.telefono         = telefono
         self.contrasena       = contrasena
-        self.estado           = estado   # PENDIENTE | ACTIVO | INACTIVO
+        self.estado           = estado   #  ACTIVO | INACTIVO
         self.rol              = self.ROL
 
     # REGLA DE NEGOCIO: solo clientes ACTIVOS pueden iniciar sesión
@@ -71,8 +71,8 @@ class Cliente:
 
     # REGLA DE NEGOCIO: activar cuenta tras verificar correo
     def activar_cuenta(self) -> None:
-        if self.estado != "PENDIENTE":
-            raise ValueError("Solo se pueden activar cuentas en estado PENDIENTE")
+        if self.estado != "INACTIVO":
+            raise ValueError("Solo se pueden activar cuentas en estado INACTIVO")
         self.estado = "ACTIVO"
 
     def to_response(self) -> dict:
