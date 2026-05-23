@@ -1,36 +1,79 @@
-from typing import Optional, List
-from domain.cliente_domain import Cliente, ClienteCreate
+# ─────────────────────────────────────────────────────────────
+# CAPA REPOSITORIO — única responsabilidad: guardar y recuperar
+# Solo manipula datos. Sin lógica de negocio aquí.
+# ─────────────────────────────────────────────────────────────
+
+from domain.cliente_domain import Cliente
+from typing import Optional
 
 
 class ClienteRepository:
-    """Simulamos una base de datos con un dict."""
 
     def __init__(self):
-        # "Base de datos" en memoria
-        self._db: dict[int, Cliente] = {}
-        self._next_id: int = 1
+        # Almacén en memoria: lista de objetos Cliente
+        self._datos: list[Cliente] = []
+        self._siguiente_id: int = 1
 
-    def get_all(self) -> List[Cliente]:
-        # Devuelve todos los clientes
-        return list(self._db.values())
+        # Datos de ejemplo para arrancar el sistema
+        self._seed()
 
-    def get_by_id(self, cliente_id: int) -> Optional[Cliente]:
-        # Busca por ID. None si no existe
-        return self._db.get(cliente_id)
+    def _seed(self):
+        """Carga datos iniciales de ejemplo."""
+        iniciales = [
+            Cliente(1, "Juan Pérez",    "juan@fitzone.com",   "3001234567", "hashed_pass_1", "ACTIVO"),
+            Cliente(2, "María López",   "maria@fitzone.com",  "3109876543", "hashed_pass_2", "ACTIVO"),
+            Cliente(3, "Carlos Ruiz",   "carlos@fitzone.com", "3205551234", "hashed_pass_3", "PENDIENTE"),
+        ]
+        self._datos = iniciales
+        self._siguiente_id = 4
 
-    def create(self, data: ClienteCreate) -> Cliente:
-        # Asigna ID, guarda y retorna el cliente
-        cliente = Cliente(
-            id=self._next_id,
-            **data.model_dump()
+    # ── CRUD básico ───────────────────────────────────────────
+
+    def obtener_todos(self) -> list[Cliente]:
+        return self._datos.copy()
+
+    def obtener_por_id(self, id: int) -> Optional[Cliente]:
+        return next((c for c in self._datos if c.id == id), None)
+
+    def obtener_por_correo(self, correo: str) -> Optional[Cliente]:
+        return next((c for c in self._datos
+                     if c.correo.lower() == correo.lower()), None)
+
+    def crear(self, nombre: str, correo: str,
+              telefono: str, contrasena: str) -> Cliente:
+        nuevo = Cliente(
+            id              = self._siguiente_id,
+            nombre          = nombre,
+            correo          = correo,
+            telefono        = telefono,
+            contrasena = contrasena,
+            estado          = "PENDIENTE",   # siempre inicia pendiente
         )
-        self._db[self._next_id] = cliente
-        self._next_id += 1
+        self._datos.append(nuevo)
+        self._siguiente_id += 1
+        return nuevo
+
+    def actualizar_estado(self, id: int, estado: str) -> Optional[Cliente]:
+        cliente = self.obtener_por_id(id)
+        if not cliente:
+            return None
+        cliente.estado = estado
         return cliente
 
-    def delete(self, cliente_id: int) -> bool:
-        # True si existía y se borró
-        if cliente_id in self._db:
-            del self._db[cliente_id]
-            return True
-        return False
+    def eliminar(self, id: int) -> bool:
+        cliente = self.obtener_por_id(id)
+        if not cliente:
+            return False
+        self._datos.remove(cliente)
+        return True
+
+    def correo_existe(self, correo: str) -> bool:
+        return self.obtener_por_correo(correo) is not None
+
+    def obtener_por_estado(self, estado: str) -> list[Cliente]:
+        return [c for c in self._datos
+                if c.estado.upper() == estado.upper()]
+
+
+# Instancia única compartida (Singleton simple)
+cliente_repository = ClienteRepository()
