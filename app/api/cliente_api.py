@@ -6,7 +6,7 @@
 
 from fastapi import APIRouter, HTTPException, status
 from app.domain.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
-from app.respository.cliente_repositories import ClienteRepository, cliente_repository
+from app.repository.cliente_repositories import ClienteRepository, cliente_repository
 from app.services.cliente_service import ClienteService
 # Crear el router con prefijo y etiqueta para la documentación
 router = APIRouter(
