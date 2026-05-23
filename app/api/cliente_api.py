@@ -5,10 +5,9 @@
 # ─────────────────────────────────────────────────────────────
 
 from fastapi import APIRouter, HTTPException, status
-from Cliente.domain.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
-from Cliente.respository.cliente_repositories import ClienteRepository, cliente_repository
-from Cliente.services.cliente_service import ClienteService
-
+from app.domain.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
+from app.respository.cliente_repositories import ClienteRepository, cliente_repository
+from app.services.cliente_service import ClienteService
 # Crear el router con prefijo y etiqueta para la documentación
 router = APIRouter(
     prefix="/api/v1/auth",

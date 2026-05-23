@@ -3,7 +3,7 @@
 # ─────────────────────────────────────────────────────────────
 
 from fastapi import FastAPI
-from Cliente.api.cliente_api import router as cliente_router
+from app.api.cliente_api import router as cliente_router
 
 # Crear la aplicación con metadata para la documentación
 app = FastAPI(
