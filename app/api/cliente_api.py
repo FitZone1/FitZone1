@@ -54,12 +54,12 @@ def obtener_cliente(id: int):
         )
 
 
-# ── PATCH /api/v1/auth/clientes/{id}/activar ─────────────────
-@router.patch("/clientes/{id}/activar", response_model=RegistroClienteResponse)
-def activar_cuenta(id: int):
-    """Activa la cuenta del cliente tras verificar su correo electrónico."""
+# ── PATCH /api/v1/auth/clientes/{id}/estado ───────────────────
+@router.patch("/clientes/{id}/estado", response_model=RegistroClienteResponse)
+def cambiar_estado(id: int, estado: str):
+    """Cambia el estado del cliente: ACTIVO, INACTIVO o PENDIENTE."""
     try:
-        return service.activar_cuenta(id)
+        return service.cambiar_estado(id, estado)
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

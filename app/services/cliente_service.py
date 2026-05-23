@@ -1,11 +1,10 @@
-from app.respository.cliente_repositories import ClienteRepository
 from app.domain.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
+from app.respository.cliente_repositories import ClienteRepository
 
 
 class ClienteService:
 
     def __init__(self, repo: ClienteRepository):
-        # Inyección de dependencia: recibe el repositorio desde afuera
         self.repo = repo
 
     def listar(self) -> list[RegistroClienteResponse]:
@@ -18,26 +17,28 @@ class ClienteService:
             raise ValueError(f"Cliente con id {id} no encontrado")
         return RegistroClienteResponse(**c.to_response())
 
-    def registrar(self, datos: RegistroClienteCreate, contrasena: str) -> RegistroClienteResponse:
+    def registrar(self, datos: RegistroClienteCreate, contrasena_hash: str) -> RegistroClienteResponse:
         # Regla de negocio: el correo no puede estar ya registrado
         if self.repo.correo_existe(datos.correo):
             raise ValueError("El correo ya está registrado")
-
         c = self.repo.crear(
-            nombre          = datos.nombre,
-            correo          = datos.correo,
-            telefono        = datos.telefono,
-            contrasena = contrasena,
+            nombre     = datos.nombre,
+            correo     = datos.correo,
+            telefono   = datos.telefono,
+            contrasena = contrasena_hash,
         )
         return RegistroClienteResponse(**c.to_response())
 
-    def activar_cuenta(self, id: int) -> RegistroClienteResponse:
-        # Regla de negocio: solo se activan cuentas en estado PENDIENTE
+    def cambiar_estado(self, id: int, estado: str) -> RegistroClienteResponse:
+        # Regla de negocio: solo se permiten estados válidos
+        estados_validos = {"ACTIVO", "INACTIVO", "PENDIENTE"}
+        if estado.upper() not in estados_validos:
+            raise ValueError(f"Estado '{estado}' no válido. Use: ACTIVO, INACTIVO o PENDIENTE")
         c = self.repo.obtener_por_id(id)
         if not c:
             raise ValueError(f"Cliente con id {id} no encontrado")
-        c.activar_cuenta()   # lanza ValueError si no está PENDIENTE
-        self.repo.actualizar_estado(id, c.estado)
+        self.repo.actualizar_estado(id, estado.upper())
+        c.estado = estado.upper()
         return RegistroClienteResponse(**c.to_response())
 
     def eliminar(self, id: int) -> dict:
