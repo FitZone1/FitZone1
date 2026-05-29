@@ -5,7 +5,7 @@ from repository.Entrenador.Entrenador_repository import EntrenadorRepository
 class EntrenadorService:
 
     def __init__(self, repo: EntrenadorRepository):
-        # Inyección de dependencia: recibe el repositorio desde afuera
+        # Inyección dee dependencia: recibe el repositorio desde afuera
         self.repo = repo
 
     def listar(self) -> list[RegistroEntrenadorResponse]:

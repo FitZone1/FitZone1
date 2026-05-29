@@ -1,7 +1,7 @@
 from app.domain.iniciosesion.iniciosesion_domain import InicioSesionCreate, InicioSesionResponse, Sesion
-from app.respository.iniciosesion.iniciosesion_repositories import SesionRepository
+from app.repository.iniciosesion.iniciosesion_repositories import SesionRepository
 from app.services.Cliente.cliente_service import ClienteRepository
-from app.respository import EntrenadorRepository
+from app.repository import EntrenadorRepository
 
 
 class SesionService:
@@ -12,7 +12,7 @@ class SesionService:
         cliente_repo:     ClienteRepository,
         entrenador_repo:  EntrenadorRepository,
     ):
-        # Inyección de dependencia: recibe los tres repositorios desde afuera
+        # Inyecciónn de dependencia: recibe los tres repositorios desde afuera
         self.sesion_repo     = sesion_repo
         self.cliente_repo    = cliente_repo
         self.entrenador_repo = entrenador_repo

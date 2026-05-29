@@ -13,7 +13,7 @@ class ClienteRepository:
         self._datos: list[Cliente] = []
         self._siguiente_id: int = 1
 
-        # Datos de ejemplo para arrancar el sistema
+        # Datos de ejemploo para arrancar el sistema
         self._seed()
 
     def _seed(self):

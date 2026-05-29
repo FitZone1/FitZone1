@@ -5,11 +5,12 @@
 # ─────────────────────────────────────────────────────────────
 
 from fastapi import APIRouter, HTTPException, status
-from app.domain.iniciosesion.iniciosesion_domain import InicioSesionCreate, InicioSesionResponse
-from app.services.iniciosesion.iniciosesion_services import SesionService
-from app.respository.iniciosesion.iniciosesion_repositories import sesion_repository
-from app.respository.Cliente.cliente_repositories import cliente_repository
-from app.repository.Entrenador.Entrenador_repository import entrenador_repository
+from domain.iniciosesion.iniciosesion_domain import InicioSesionCreate, InicioSesionResponse
+from services.iniciosesion.iniciosesion_services import SesionService
+from repository.iniciosesion.iniciosesion_repositories import sesion_repository
+from repository.Cliente.cliente_repositories import cliente_repository
+from repository.Entrenador.Entrenador_repository import entrenador_repository
+
 
 # Crear el router con prefijo y etiqueta para la documentación
 router = APIRouter(

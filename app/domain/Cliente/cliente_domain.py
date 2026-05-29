@@ -3,7 +3,7 @@ from typing import Optional
 import re
 
 
-# ── Schema de ENTRADA (lo que recibe la API del cliente) ──────
+# ── Schema de ENTRADA (lo que recibe la API del clientee) ──────
 class RegistroClienteCreate(BaseModel):
     nombre:     str = Field(..., min_length=2, description="Nombre completo del cliente")
     correo:     str = Field(..., description="Correo electrónico único del cliente")

@@ -10,7 +10,7 @@ from typing import Optional
 class SesionRepository:
 
     def __init__(self):
-        # Almacén en memoria: tokens activos { token: Sesion }
+        # Almacén en memoriaa: tokens activos { token: Sesion }
         self._sesiones_activas: dict[str, Sesion] = {}
 
     # ── Operaciones sobre sesiones ────────────────────────────

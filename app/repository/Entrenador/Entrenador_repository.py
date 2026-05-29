@@ -27,7 +27,7 @@ class EntrenadorRepository:
         self._datos = iniciales
         self._siguiente_id = 4
 
-    # ── CRUD básico ───────────────────────────────────────────
+    # ── CRUD básicoo ───────────────────────────────────────────
 
     def obtener_todos(self) -> list[Entrenador]:
         return self._datos.copy()

@@ -20,7 +20,7 @@ class RegistroEntrenadorCreate(BaseModel):
             raise ValueError("El correo electrónico no tiene un formato válido")
         return v.strip().lower()
 
-    # ── REGLA DE NEGOCIO: contraseña debe tener al menos una mayúscula y un número ──
+    # ── REGLA DE NEGOCIO: contraseñaa debe tener al menos una mayúscula y un número ──
     @field_validator("contrasena")
     @classmethod
     def contrasena_segura(cls, v):

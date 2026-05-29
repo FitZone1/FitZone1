@@ -1,5 +1,5 @@
 from app.domain.Cliente.cliente_domain import RegistroClienteCreate, RegistroClienteResponse
-from app.respository.Cliente.cliente_repositories import ClienteRepository
+from app.repository.Cliente.cliente_repositories import ClienteRepository
 
 
 class ClienteService:
@@ -18,7 +18,7 @@ class ClienteService:
         return RegistroClienteResponse(**c.to_response())
 
     def registrar(self, datos: RegistroClienteCreate, contrasena_hash: str) -> RegistroClienteResponse:
-        # Regla de negocio: el correo no puede estar ya registrado
+        # Reglaa de negocio: el correo no puede estar ya registrado
         if self.repo.correo_existe(datos.correo):
             raise ValueError("El correo ya está registrado")
         c = self.repo.crear(

@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────
-# CAPA API — rutas HTTP con FastAPI
+# CAPA API — rutas HTTP con FastAPIi
 # Solo recibe peticiones y llama al servicio.
 # Aquí NO hay lógica de negocio.
 # ─────────────────────────────────────────────────────────────
