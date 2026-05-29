@@ -1,14 +1,12 @@
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
 import re
 
 
-# ── Schema de ENTRADA (lo que recibee la API del cliente) ──────
+# ── Schema de ENTRADA ─────────────────────────────────────────
 class InicioSesionCreate(BaseModel):
     correo:     str = Field(..., description="Correo electrónico registrado")
     contrasena: str = Field(..., min_length=1, description="Contraseña del usuario")
 
-    # ── REGLA DE NEGOCIO: correo debe tener formato válido ───
     @field_validator("correo")
     @classmethod
     def correo_valido(cls, v):
@@ -18,18 +16,18 @@ class InicioSesionCreate(BaseModel):
         return v.strip().lower()
 
 
-# ── Schema de SALIDA (lo que devuelve la API al cliente) ──────
+# ── Schema de SALIDA ──────────────────────────────────────────
 class InicioSesionResponse(BaseModel):
     idUsuario: int
     nombre:    str
-    rol:       str    # "CLIENTE" o "ENTRENADOR"
-    token:     str    # JWT generado por el backend
+    rol:       str
+    token:     str
 
     class Config:
         from_attributes = True
 
 
-# ── Modelo interno del dominio (la "entidad real") ────────────
+# ── Modelo interno del dominio ────────────────────────────────
 class Sesion:
     ROLES_VALIDOS = {"CLIENTE", "ENTRENADOR"}
 
@@ -39,11 +37,9 @@ class Sesion:
         self.rol        = rol
         self.token      = token
 
-    # REGLA DE NEGOCIO: el rol del token debe ser CLIENTE o ENTRENADOR
     def rol_es_valido(self) -> bool:
         return self.rol in self.ROLES_VALIDOS
 
-    # REGLA DE NEGOCIO: el token no puede estar vacío
     def token_generado(self) -> bool:
         return bool(self.token and self.token.strip())
 

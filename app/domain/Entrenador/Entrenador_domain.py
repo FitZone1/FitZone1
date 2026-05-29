@@ -11,7 +11,6 @@ class RegistroEntrenadorCreate(BaseModel):
     especialidad: str = Field(..., min_length=3, description="Especialidad principal del entrenador")
     gimnasioId:   int = Field(..., gt=0, description="ID del gimnasio al que pertenece")
 
-    # ── REGLA DE NEGOCIO: correo debe tener formato válido ───
     @field_validator("correo")
     @classmethod
     def correo_valido(cls, v):
@@ -20,7 +19,6 @@ class RegistroEntrenadorCreate(BaseModel):
             raise ValueError("El correo electrónico no tiene un formato válido")
         return v.strip().lower()
 
-    # ── REGLA DE NEGOCIO: contraseñaa debe tener al menos una mayúscula y un número ──
     @field_validator("contrasena")
     @classmethod
     def contrasena_segura(cls, v):
@@ -30,7 +28,6 @@ class RegistroEntrenadorCreate(BaseModel):
             raise ValueError("La contraseña debe contener al menos un número")
         return v
 
-    # ── REGLA DE NEGOCIO: especialidad no puede contener números ─
     @field_validator("especialidad")
     @classmethod
     def especialidad_sin_numeros(cls, v):
@@ -43,34 +40,32 @@ class RegistroEntrenadorCreate(BaseModel):
 class RegistroEntrenadorResponse(BaseModel):
     idUsuario:    int
     nombre:       str
-    rol:          str   # siempre "ENTRENADOR"
+    rol:          str
     especialidad: str
 
     class Config:
         from_attributes = True
 
 
-# ── Modelo interno del dominio (la "entidad real") ────────────
+# ── Modelo interno del dominio ────────────────────────────────
 class Entrenador:
     ROL = "ENTRENADOR"
 
     def __init__(self, id: int, nombre: str, correo: str,
-                 contrasena_hash: str, especialidad: str,
+                 contrasena: str, especialidad: str,
                  gimnasio_id: int, estado: str = "ACTIVO"):
-        self.id               = id
-        self.nombre           = nombre
-        self.correo           = correo
-        self.contrasena_hash  = contrasena_hash
-        self.especialidad     = especialidad
-        self.gimnasio_id      = gimnasio_id
-        self.estado           = estado   # ACTIVO | INACTIVO
-        self.rol              = self.ROL
+        self.id          = id
+        self.nombre      = nombre
+        self.correo      = correo
+        self.contrasena  = contrasena
+        self.especialidad = especialidad
+        self.gimnasio_id = gimnasio_id
+        self.estado      = estado
+        self.rol         = self.ROL
 
-    # REGLA DE NEGOCIO: solo entrenadores ACTIVOS son visibles en el listado
     def es_visible(self) -> bool:
         return self.estado == "ACTIVO"
 
-    # REGLA DE NEGOCIO: entrenadores NO pueden realizar pagos ni suscribirse a planes
     def puede_realizar_pago(self) -> bool:
         return False
 

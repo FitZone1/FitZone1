@@ -3,7 +3,9 @@
 # ─────────────────────────────────────────────────────────────
 
 from fastapi import FastAPI
-from app.api.cliente_api import router as cliente_router
+from app.api.Cliente.cliente_api import router as cliente_router
+from app.api.Entrenador.Entrenador_api import router as entrenador_router
+from app.api.iniciosesion.iniciosesion_api import router as iniciosesion_router
 
 # Crear la aplicación con metadata para la documentación
 app = FastAPI(
@@ -12,8 +14,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Registrar el router de cliente
+# Registrar los routers
 app.include_router(cliente_router)
+app.include_router(entrenador_router)
+app.include_router(iniciosesion_router)
 
 # Ruta raíz — bienvenida
 @app.get("/", tags=["Root"])
