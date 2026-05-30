@@ -101,7 +101,7 @@
     - HTTP 201 Created
     - Campo success: true
     - Se retorna el idUsuario asignado 
-    - Estado del usuario: PENDIENTE
+    - Estado del usuario: ACTIVO
 
 ### ❌ Caso 2: Correo ya registrado
 
