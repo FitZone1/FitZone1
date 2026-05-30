@@ -1,21 +1,19 @@
 # ─────────────────────────────────────────────────────────────
-# CAPA API — rutas HTTP con FastAPIi
+# CAPA API — rutas HTTP con FastAPI
 # Solo recibe peticiones y llama al servicio.
 # Aquí NO hay lógica de negocio.
 # ─────────────────────────────────────────────────────────────
 
 from fastapi import APIRouter, HTTPException, status
-from domain.Entrenador.Entrenador_domain import RegistroEntrenadorCreate, RegistroEntrenadorResponse
-from services.Entrenador.Entrenador_services import EntrenadorService
-from repository.Entrenador.Entrenador_repository import entrenador_repository
+from app.domain.Entrenador.Entrenador_domain import RegistroEntrenadorCreate, RegistroEntrenadorResponse
+from app.repository.Entrenador.Entrenador_repository import entrenador_repository
+from app.services.Entrenador.Entrenador_services import EntrenadorService
 
-# Crear el router con prefijo y etiqueta para la documentación
 router = APIRouter(
     prefix="/api/v1/entrenadores",
     tags=["Registro Entrenador"],
 )
 
-# Instanciar el servicio con inyección del repositorio
 service = EntrenadorService(repo=entrenador_repository)
 
 
@@ -25,7 +23,6 @@ service = EntrenadorService(repo=entrenador_repository)
 def registrar_entrenador(datos: RegistroEntrenadorCreate):
     """Registra un nuevo entrenador con sus datos personales y especialidad."""
     try:
-        # En producción la contraseña se hashea aquí antes de pasar al servicio
         contrasena_hash = f"hashed_{datos.contrasena}"
         return service.registrar(datos, contrasena_hash)
     except ValueError as e:
@@ -45,7 +42,7 @@ def listar_entrenadores():
 # ── GET /api/v1/entrenadores/activos ─────────────────────────
 @router.get("/activos", response_model=list[RegistroEntrenadorResponse])
 def listar_entrenadores_activos():
-    """Retorna solo los entrenadores con estado ACTIVO (visibles para clientes)."""
+    """Retorna solo los entrenadores con estado ACTIVO."""
     try:
         return service.listar_activos()
     except ValueError as e:
@@ -77,6 +74,19 @@ def actualizar_entrenador(id: int, datos: RegistroEntrenadorCreate):
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+
+
+# ── PATCH /api/v1/entrenadores/{id}/estado ───────────────────
+@router.patch("/{id}/estado", response_model=RegistroEntrenadorResponse)
+def cambiar_estado(id: int, estado: str):
+    """Cambia el estado del entrenador: ACTIVO o INACTIVO."""
+    try:
+        return service.cambiar_estado(id, estado)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
         )
 

@@ -1,24 +1,15 @@
-# ─────────────────────────────────────────────────────────────
-# CAPA REPOSITORIO — única responsabilidad: guardar y recuperar
-# Solo manipula datos. Sin lógica de negocio aquí.
-# ─────────────────────────────────────────────────────────────
-
-from domain.Entrenador.Entrenador_domain import Entrenador
+from app.domain.Entrenador.Entrenador_domain import Entrenador
 from typing import Optional
 
 
 class EntrenadorRepository:
 
     def __init__(self):
-        # Almacén en memoria: lista de objetos Entrenador
         self._datos: list[Entrenador] = []
         self._siguiente_id: int = 1
-
-        # Datos de ejemplo para arrancar el sistema
         self._seed()
 
     def _seed(self):
-        """Carga datos iniciales de ejemplo."""
         iniciales = [
             Entrenador(1, "Carlos Villamizar", "carlos@fitzone.com", "hashed_pass_1", "Musculación",  1, "ACTIVO"),
             Entrenador(2, "Sofía Ramírez",     "sofia@fitzone.com",  "hashed_pass_2", "Yoga",         1, "ACTIVO"),
@@ -26,8 +17,6 @@ class EntrenadorRepository:
         ]
         self._datos = iniciales
         self._siguiente_id = 4
-
-    # ── CRUD básicoo ───────────────────────────────────────────
 
     def obtener_todos(self) -> list[Entrenador]:
         return self._datos.copy()
@@ -42,13 +31,13 @@ class EntrenadorRepository:
     def crear(self, nombre: str, correo: str, contrasena: str,
               especialidad: str, gimnasio_id: int) -> Entrenador:
         nuevo = Entrenador(
-            id              = self._siguiente_id,
-            nombre          = nombre,
-            correo          = correo,
-            contrasena = contrasena,
-            especialidad    = especialidad,
-            gimnasio_id     = gimnasio_id,
-            estado          = "ACTIVO",   # entrenador queda activo al registrarse
+            id           = self._siguiente_id,
+            nombre       = nombre,
+            correo       = correo,
+            contrasena   = contrasena,
+            especialidad = especialidad,
+            gimnasio_id  = gimnasio_id,
+            estado       = "ACTIVO",
         )
         self._datos.append(nuevo)
         self._siguiente_id += 1

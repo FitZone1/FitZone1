@@ -5,20 +5,17 @@
 # ─────────────────────────────────────────────────────────────
 
 from fastapi import APIRouter, HTTPException, status
-from domain.iniciosesion.iniciosesion_domain import InicioSesionCreate, InicioSesionResponse
-from services.iniciosesion.iniciosesion_services import SesionService
-from repository.iniciosesion.iniciosesion_repositories import sesion_repository
-from repository.Cliente.cliente_repositories import cliente_repository
-from repository.Entrenador.Entrenador_repository import entrenador_repository
+from app.domain.iniciosesion.iniciosesion_domain import InicioSesionCreate, InicioSesionResponse
+from app.repository.iniciosesion.iniciosesion_repositories import sesion_repository
+from app.repository.Cliente.cliente_repositories import cliente_repository
+from app.repository.Entrenador.Entrenador_repository import entrenador_repository
+from app.services.iniciosesion.iniciosesion_services import SesionService
 
-
-# Crear el router con prefijo y etiqueta para la documentación
 router = APIRouter(
     prefix="/api/auth",
     tags=["Inicio de Sesión"],
 )
 
-# Instanciar el servicio con inyección de los tres repositorios
 service = SesionService(
     sesion_repo     = sesion_repository,
     cliente_repo    = cliente_repository,
@@ -26,10 +23,10 @@ service = SesionService(
 )
 
 
-# ── Funciones utilitarias (en producción irían en un módulo aparte) ──
-def _verificar_contrasena(hash_guardado: str, plain: str) -> bool:
+# ── Funciones utilitarias ─────────────────────────────────────
+def _verificar_contrasena(contrasena_guardada: str, plain: str) -> bool:
     """Simula verificación de contraseña. En producción: bcrypt.checkpw()"""
-    return hash_guardado == f"hashed_{plain}"
+    return contrasena_guardada == f"hashed_{plain}"
 
 def _generar_token(id_usuario: int, rol: str) -> str:
     """Simula generación de JWT. En producción: jwt.encode()"""
@@ -42,9 +39,9 @@ def iniciar_sesion(datos: InicioSesionCreate):
     """Autentica al usuario y retorna un token JWT con su rol."""
     try:
         return service.iniciar_sesion(
-            datos               = datos,
+            datos                = datos,
             verificar_contrasena = _verificar_contrasena,
-            generar_token       = _generar_token,
+            generar_token        = _generar_token,
         )
     except ValueError as e:
         raise HTTPException(
