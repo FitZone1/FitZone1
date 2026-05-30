@@ -5,25 +5,22 @@
 # ─────────────────────────────────────────────────────────────
 
 from fastapi import APIRouter, HTTPException, status
-from domain.Controlpermisos.control_permisos_domain import ValidarAutorizacionCreate, ValidarAutorizacionResponse
-from services.Controlpermisos.control_permisos_service import ControlPermisosService
-from repository.Controlpermisos.control_permisos_repository import control_permisos_repository
+from app.domain.ControlPermisos.ControlPermisos_domain import ValidarAutorizacionCreate, ValidarAutorizacionResponse
+from app.repository.ControlPermisos.ControlPermisos_repository import control_permisos_repository
+from app.services.ControlPermisos.ControlPermisos_services import ControlPermisosService
 
-# Crear el router con prefijo y etiqueta para la documentación
 router = APIRouter(
     prefix="/api/auth",
     tags=["Control de Permisos"],
 )
 
-# Instanciar el servicio con inyección del repositorio
 service = ControlPermisosService(repo=control_permisos_repository)
 
 
-# ── Función utilitaria (en producción iría en un módulo aparte) ──
+# ── Función utilitaria ────────────────────────────────────────
 def _decodificar_token(token: str) -> dict | None:
     """Simula decodificación de JWT. En producción: jwt.decode()"""
     try:
-        # Formato simulado: "jwt_{id}_{rol}_token"
         partes = token.split("_")
         return {"id_usuario": int(partes[1]), "rol": partes[2]}
     except Exception:
@@ -36,8 +33,8 @@ def validar_autorizacion(datos: ValidarAutorizacionCreate):
     """Valida si el token tiene permisos para ejecutar la acción sobre el recurso."""
     try:
         return service.validar_autorizacion(
-            datos              = datos,
-            decodificar_token  = _decodificar_token,
+            datos             = datos,
+            decodificar_token = _decodificar_token,
         )
     except PermissionError as e:
         codigo = str(e)
@@ -88,4 +85,4 @@ def usuarios_por_rol(rol: str):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
-        )
+        ) 

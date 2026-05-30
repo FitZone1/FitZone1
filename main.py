@@ -20,7 +20,7 @@ app.include_router(entrenador_router)
 app.include_router(iniciosesion_router)
 
 
-# Ruta raíz — bienvenida
+## Ruta raíz — bienvenida
 @app.get("/", tags=["Root"])
 def root():
     return {
