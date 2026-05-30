@@ -10,6 +10,9 @@ from app.api.Entrenador.EntrenadoresDisponibles_api import router as entrenadore
 from app.api.Cliente.ReservaSesion_api import router as reserva_sesion_router
 from app.api.Cliente.CancelarReserva_api import router as cancelar_reserva_router
 from app.api.Entrenador.GestionHorarios_api import router as gestion_horarios_router
+from app.api.Cliente.PagoMensualidad_api import router as pagar_mensualidad_router
+from app.api.ControlPermisos.ControlPermisos_api import router as control_permisos_router
+
 
 # Crear la aplicación con metadata para la documentación
 app = FastAPI(
@@ -26,6 +29,8 @@ app.include_router(entrenadores_disponibles_router)
 app.include_router(reserva_sesion_router)
 app.include_router(cancelar_reserva_router)
 app.include_router(gestion_horarios_router)
+app.include_router(control_permisos_router)
+app.include_router(pagar_mensualidad_router)
 
 # Ruta raíz — bienvenida
 @app.get("/", tags=["Root"])
