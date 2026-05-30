@@ -3,7 +3,7 @@
 # Solo manipula datos. Sin lógica de negocio aquí.
 # ─────────────────────────────────────────────────────────────
 
-from app.domain.Cliente.cliente_domain import Cliente
+from domain.Cliente.cliente_domain import Cliente
 from typing import Optional
 
 class ClienteRepository:
