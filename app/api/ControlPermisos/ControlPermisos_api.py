@@ -85,4 +85,4 @@ def usuarios_por_rol(rol: str):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e)
-        ) 
+        )

@@ -50,5 +50,5 @@ class ControlPermisosRepository:
                 if cp.rol.upper() == rol.upper()]
 
 
-##  Instancia única compartida (Singleton simple)
-control_permisos_repository = ControlPermisosRepository() 
+# Instancia única compartida (Singleton simple)
+control_permisos_repository = ControlPermisosRepository()

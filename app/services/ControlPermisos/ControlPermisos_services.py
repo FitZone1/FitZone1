@@ -13,7 +13,7 @@ class ControlPermisosService:
         decodificar_token,
     ) -> ValidarAutorizacionResponse:
 
-        ## Regla de negocio: el token debe ser válido
+        # Regla de negocio: el token debe ser válido
         payload = decodificar_token(datos.token)
         if not payload:
             raise PermissionError("TOKEN_INVALIDO")

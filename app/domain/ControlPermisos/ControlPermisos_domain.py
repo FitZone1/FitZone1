@@ -62,7 +62,7 @@ class ControlPermisos:
     def cliente_puede_modificar_rutina(self) -> bool:
         return self.rol != "CLIENTE"
 
-    # REGLA DE NEGOCIO: entrenadores NO pueden realizar pagos
+    ## REGLA DE NEGOCIO: entrenadores NO pueden realizar pagos
     def entrenador_puede_pagar(self) -> bool:
         return self.rol != "ENTRENADOR"
 
