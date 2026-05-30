@@ -28,7 +28,6 @@ app.include_router(reserva_sesion_router)
 app.include_router(cancelar_reserva_router)
 app.include_router(gestion_horarios_router)
 app.include_router(control_permisos_router)
-
 # Ruta raíz — bienvenida
 @app.get("/", tags=["Root"])
 def root():
