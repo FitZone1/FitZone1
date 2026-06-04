@@ -22,7 +22,7 @@ service = ClienteService(repo=cliente_repository)
 @router.post("/registro", response_model=RegistroClienteResponse,
              status_code=status.HTTP_201_CREATED)
 def registrar_cliente(datos: RegistroClienteCreate):
-    """Registra un nuevo cliente. El estado inicial es PENDIENTE hasta verificar correo."""
+    """Registra un nuevo cliente. El estado inicial es ACTIVO desde el momento del registro."""
     try:
         # En producción la contraseña se hashea aquí antes de pasar al servicio
         contrasena_hash = f"hashed_{datos.contrasena}"
