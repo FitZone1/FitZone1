@@ -28,9 +28,12 @@ def _verificar_contrasena(contrasena_guardada: str, plain: str) -> bool:
     """Simula verificación de contraseña. En producción: bcrypt.checkpw()"""
     return contrasena_guardada == f"hashed_{plain}"
 
-def _generar_token(id_usuario: int, rol: str) -> str:
-    """Simula generación de JWT. En producción: jwt.encode()"""
-    return f"jwt_{id_usuario}_{rol}_token"
+def _generar_token(id_usuario: int, correo: str, rol: str) -> str:
+    """Simula generación de JWT. En producción: jwt.encode()
+    Formato: jwt_<id>|<correo>|<rol>_token
+    Se usa '|' como separador interno para evitar conflictos con correos que contienen '_'.
+    """
+    return f"jwt_{id_usuario}|{correo}|{rol}_token"
 
 
 # ── POST /api/auth/login ──────────────────────────────────────

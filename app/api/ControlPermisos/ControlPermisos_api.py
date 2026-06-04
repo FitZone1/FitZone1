@@ -19,10 +19,19 @@ service = ControlPermisosService(repo=control_permisos_repository)
 
 # ── Función utilitaria ────────────────────────────────────────
 def _decodificar_token(token: str) -> dict | None:
-    """Simula decodificación de JWT. En producción: jwt.decode()"""
+    """Simula decodificación de JWT. En producción: jwt.decode()
+    Formato esperado: jwt_<id>|<correo>|<rol>_token
+    Se usa '|' como separador interno para evitar conflictos con correos que contienen '_'.
+    """
     try:
-        partes = token.split("_")
-        return {"id_usuario": int(partes[1]), "rol": partes[2]}
+        # Extraer la parte central entre el prefijo 'jwt_' y el sufijo '_token'
+        interior = token.removeprefix("jwt_").removesuffix("_token")
+        partes = interior.split("|")
+        return {
+            "id_usuario": int(partes[0]),
+            "correo":     partes[1],
+            "rol":        partes[2],
+        }
     except Exception:
         return None
 
