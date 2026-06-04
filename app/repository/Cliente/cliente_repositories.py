@@ -46,7 +46,7 @@ class ClienteRepository:
             correo          = correo,
             telefono        = telefono,
             contrasena = contrasena,
-            estado          = "PENDIENTE",   # siempre inicia pendiente
+            estado          = "ACTIVO",   # queda activo inmediatamente al registrarse
         )
         self._datos.append(nuevo)
         self._siguiente_id += 1
