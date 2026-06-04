@@ -1,292 +1,292 @@
-## [HU-04] Control de permisos por rol
+# [HU-04] Control de permisos por rol
 
-### 📖 Historia de usuario
+## 📖 Historia de usuario
 
-**Como** Sistema de autorización de FitZone
-**Quiero** Controlar qué acciones puede realizar cada usuario según su rol (CLIENTE o ENTRENADOR)
+**Como** Sistema de autorización de BlessedFit  
+**Quiero** Controlar qué acciones puede realizar cada usuario según su rol (`CLIENTE` o `ENTRENADOR`)  
 **Para** Garantizar que ningún usuario acceda a funciones que no le corresponden y mantener la seguridad de la plataforma
+
+---
 
 ## 🔁 Flujo esperado
 
 - El usuario realiza una solicitud a un endpoint protegido incluyendo su token JWT.
 - El sistema consume el endpoint `POST /api/auth/validar-autorizacion` con el token, recurso y acción.
-- El backend extrae el rol del token y valida si tiene permiso para ejecutar la acción solicitada.
-- Si tiene permiso, se retorna `autorizado: true` y se continúa con la operación.
-- Si no tiene permiso, se retorna HTTP 403 con el código `AUTH_UNAUTHORIZED`.
+- El backend decodifica el token y extrae el `id_usuario` y `rol`.
+- Se verifica que el usuario tenga un perfil de permisos registrado en el sistema.
+- Se valida si el rol tiene permiso para ejecutar la acción sobre el recurso solicitado.
+- Si tiene permiso, se retorna HTTP 200 con `autorizado: true`.
+- Si no tiene permiso, se retorna HTTP 403 con mensaje `"Acceso denegado"`.
+- Si el token es inválido o el usuario no tiene perfil registrado, se retorna HTTP 401.
 
-## Tabla de permisos por rol
+---
 
-| Rol        | Recurso   | Acciones permitidas                     |
-|------------|-----------|------------------------------------------|
-| CLIENTE    | rutinas   | VER                                      |
-| CLIENTE    | pagos     | CREAR, VER                               |
-| CLIENTE    | planes    | SUSCRIBIR, VER                           |
-| CLIENTE    | reservas  | CREAR, VER, CANCELAR                     |
-| CLIENTE    | perfil    | VER, EDITAR                              |
-| ENTRENADOR | rutinas   | CREAR, VER, EDITAR, ELIMINAR             |
-| ENTRENADOR | reservas  | VER                                      |
-| ENTRENADOR | perfil    | VER, EDITAR                              |
-| ENTRENADOR | clientes  | VER                                      |
-| ENTRENADOR | horarios  | CREAR, VER, EDITAR                       |
+## 🗺️ Mapa de permisos por rol
 
-> **Reglas clave:**
-> - Los clientes **NO** pueden CREAR, EDITAR ni ELIMINAR rutinas.
-> - Los entrenadores **NO** pueden realizar pagos ni suscribirse a planes.
+| Recurso | CLIENTE | ENTRENADOR |
+|---|---|---|
+| `rutinas` | `VER` | `CREAR`, `VER`, `EDITAR`, `ELIMINAR` |
+| `pagos` | `CREAR`, `VER` | ❌ sin acceso |
+| `planes` | `SUSCRIBIR`, `VER` | ❌ sin acceso |
+| `reservas` | `CREAR`, `VER`, `CANCELAR` | `VER` |
+| `perfil` | `VER`, `EDITAR` | `VER`, `EDITAR` |
+| `clientes` | ❌ sin acceso | `VER` |
+| `horarios` | ❌ sin acceso | `CREAR`, `VER`, `EDITAR` |
 
-## Criterios de aceptación
+> **Nota:** El campo `accion` se normaliza automáticamente a mayúsculas y `recurso` a minúsculas antes de validar.
+
+---
+
+## ✅ Criterios de aceptación
 
 ### 1. 🔍 Estructura y lógica del servicio
 
-- [ ] Se expone un endpoint `POST /api/auth/validar-autorizacion` que recibe token, recurso y acción.
-- [ ] El backend extrae el rol del token y lo valida contra el mapa de permisos.
-- [ ] Los clientes NO pueden CREAR, EDITAR ni ELIMINAR rutinas.
-- [ ] Los entrenadores NO pueden realizar pagos ni suscribirse a planes.
-- [ ] Un recurso o acción no reconocidos retorna HTTP 403.
+- [ ] Se expone un endpoint `POST /api/auth/validar-autorizacion` que recibe `token`, `recurso` y `accion`.
+- [ ] El backend decodifica el token para extraer `id_usuario` y `rol`.
+- [ ] El token inválido (no decodificable) retorna HTTP 401.
+- [ ] El usuario sin perfil de permisos registrado retorna HTTP 401.
+- [ ] El backend valida el rol contra el mapa de permisos para el recurso y acción solicitados.
+- [ ] Los clientes **NO** pueden `CREAR`, `EDITAR` ni `ELIMINAR` rutinas.
+- [ ] Los entrenadores **NO** pueden acceder a `pagos` ni `planes`.
+- [ ] Se expone `POST /api/auth/roles` para asignar o actualizar el rol de un usuario.
+- [ ] Se expone `DELETE /api/auth/roles/{id_usuario}` para revocar todos los permisos de un usuario.
+- [ ] Se expone `GET /api/auth/roles/{rol}` para listar usuarios por rol.
 
-### 2. 📆 Estructura de la información
+### 2. 📋 Estructura de la información
 
-- [ ] Se responde con la siguiente estructura cuando el acceso es autorizado:
-
-```json
-{
-  "success": true,
-  "message": "Acceso autorizado correctamente",
-  "data": {
-    "idUsuario": 42,
-    "autorizado": true
-  }
-}
-```
-
-- [ ] Si el rol no tiene permisos para la acción solicitada:
+Respuesta exitosa de `POST /api/auth/validar-autorizacion`:
 
 ```json
 {
-  "success": false,
-  "statusCode": 403,
-  "message": "Acceso denegado",
-  "error": {
-    "error_code": "AUTH_UNAUTHORIZED",
-    "details": "El token no tiene permisos para acceder a este recurso",
-    "timestamp": "2026-03-18T10:30:00"
-  }
+  "idUsuario": 42,
+  "autorizado": true
 }
 ```
 
-- [ ] Si el token es inválido o está expirado:
+Respuesta de error por permiso denegado (HTTP 403):
 
 ```json
 {
-  "success": false,
-  "statusCode": 401,
-  "message": "Credenciales incorrectas",
-  "error": {
-    "error_code": "AUTH_INVALID_CREDENTIALS",
-    "details": "El correo o la contraseña no son válidos",
-    "timestamp": "2026-03-18T10:30:00"
-  }
+  "detail": "Acceso denegado"
 }
 ```
+
+Respuesta de error por token inválido o usuario sin perfil (HTTP 401):
+
+```json
+{
+  "detail": "El token no es válido o ha expirado"
+}
+```
+
+Respuesta de error por parámetros inválidos (HTTP 422):
+
+```json
+{
+  "detail": [
+    {
+      "loc": ["body", "accion"],
+      "msg": "ensure this value has at least 2 characters",
+      "type": "value_error.any_str.min_length"
+    }
+  ]
+}
+```
+
+Respuesta de `POST /api/auth/roles` exitoso:
+
+```json
+{
+  "mensaje": "Rol 'CLIENTE' asignado correctamente al usuario 42"
+}
+```
+
+Respuesta de `DELETE /api/auth/roles/{id_usuario}` exitoso:
+
+```json
+{
+  "mensaje": "Acceso revocado para el usuario 42"
+}
+```
+
+---
 
 ## 🔧 Notas Técnicas
 
-- **Método HTTP:** `POST`
-- **Ruta:** `/api/auth/validar-autorizacion`
-- El token sigue el formato `jwt_{idUsuario}_{ROL}_token`. El backend lo decodifica extrayendo `id_usuario` y `rol`.
-- El campo `recurso` se normaliza a minúsculas; el campo `accion` a mayúsculas antes de validar.
+| Endpoint | Método | Descripción |
+|---|---|---|
+| `/api/auth/validar-autorizacion` | `POST` | Valida si el token tiene permiso para recurso + acción |
+| `/api/auth/roles` | `POST` | Asigna o actualiza el rol de un usuario |
+| `/api/auth/roles/{id_usuario}` | `DELETE` | Revoca todos los permisos de un usuario |
+| `/api/auth/roles/{rol}` | `GET` | Lista todos los usuarios con un rol específico |
 
-## 📤 Ejemplo de Respuesta JSON
+**Campos de entrada para `/api/auth/validar-autorizacion`:**
 
-```json
-{
-  "success": true,
-  "message": "Acceso autorizado correctamente",
-  "data": {
-    "idUsuario": 42,
-    "autorizado": true
-  }
-}
-```
+| Campo | Tipo | Regla |
+|---|---|---|
+| `token` | string | JWT generado en el login |
+| `recurso` | string (min 2 chars) | Se normaliza a minúsculas automáticamente |
+| `accion` | string (min 2 chars) | Se normaliza a mayúsculas automáticamente |
 
-## 🧪 Requisitos de prueba
+---
 
-### Casos de prueba funcional
+## 🧪 Casos de prueba funcional
 
-### ✅ Caso 1: Entrenador crea una rutina — autorizado
+---
 
-- **Precondición:** Token válido de un ENTRENADOR (ej. `jwt_10_ENTRENADOR_token`).
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_10_ENTRENADOR_token", "recurso": "rutinas", "accion": "CREAR" }
-```
+### ✅ Caso 1: Entrenador crea una rutina — acceso autorizado
+
+- **Precondición:** Usuario con rol `ENTRENADOR` tiene perfil registrado y token válido.
+- **Acción:** `POST /api/auth/validar-autorizacion` con token de ENTRENADOR, `recurso: "rutinas"`, `accion: "CREAR"`.
 - **Resultado esperado:**
   - HTTP 200 OK
-  - `success: true`
   - `autorizado: true`
+  - `idUsuario` presente en la respuesta
 
-### ✅ Caso 2: Entrenador edita una rutina — autorizado
+---
 
-- **Precondición:** Token válido de un ENTRENADOR.
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_10_ENTRENADOR_token", "recurso": "rutinas", "accion": "EDITAR" }
-```
+### ✅ Caso 2: Cliente ve sus rutinas — acceso autorizado
+
+- **Precondición:** Usuario con rol `CLIENTE` tiene perfil registrado y token válido.
+- **Acción:** `POST /api/auth/validar-autorizacion` con token de CLIENTE, `recurso: "rutinas"`, `accion: "VER"`.
 - **Resultado esperado:**
   - HTTP 200 OK
   - `autorizado: true`
 
-### ✅ Caso 3: Entrenador elimina una rutina — autorizado
+---
 
-- **Precondición:** Token válido de un ENTRENADOR.
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_10_ENTRENADOR_token", "recurso": "rutinas", "accion": "ELIMINAR" }
-```
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - `autorizado: true`
+### ❌ Caso 3: Cliente intenta crear una rutina — acceso denegado
 
-### ✅ Caso 4: Cliente ve una rutina — autorizado
-
-- **Precondición:** Token válido de un CLIENTE (ej. `jwt_1_CLIENTE_token`).
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_1_CLIENTE_token", "recurso": "rutinas", "accion": "VER" }
-```
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - `autorizado: true`
-
-### ✅ Caso 5: Cliente crea un pago — autorizado
-
-- **Precondición:** Token válido de un CLIENTE.
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_1_CLIENTE_token", "recurso": "pagos", "accion": "CREAR" }
-```
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - `autorizado: true`
-
-### ✅ Caso 6: Cliente se suscribe a un plan — autorizado
-
-- **Precondición:** Token válido de un CLIENTE.
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_1_CLIENTE_token", "recurso": "planes", "accion": "SUSCRIBIR" }
-```
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - `autorizado: true`
-
-### ❌ Caso 7: Cliente intenta crear una rutina — denegado
-
-- **Precondición:** Token válido de un CLIENTE.
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_1_CLIENTE_token", "recurso": "rutinas", "accion": "CREAR" }
-```
+- **Precondición:** Usuario con rol `CLIENTE` tiene perfil registrado y token válido.
+- **Acción:** `POST /api/auth/validar-autorizacion` con token de CLIENTE, `recurso: "rutinas"`, `accion: "CREAR"`.
 - **Resultado esperado:**
   - HTTP 403 Forbidden
-  - `success: false`
-  - `error_code`: `AUTH_UNAUTHORIZED`
   - Mensaje: `"Acceso denegado"`
 
-### ❌ Caso 8: Cliente intenta editar una rutina — denegado
+---
 
-- **Precondición:** Token válido de un CLIENTE.
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_1_CLIENTE_token", "recurso": "rutinas", "accion": "EDITAR" }
-```
+### ❌ Caso 4: Entrenador intenta realizar un pago — acceso denegado
+
+- **Precondición:** Usuario con rol `ENTRENADOR` tiene perfil registrado y token válido.
+- **Acción:** `POST /api/auth/validar-autorizacion` con token de ENTRENADOR, `recurso: "pagos"`, `accion: "CREAR"`.
 - **Resultado esperado:**
   - HTTP 403 Forbidden
-  - `error_code`: `AUTH_UNAUTHORIZED`
-
-### ❌ Caso 9: Entrenador intenta crear un pago — denegado
-
-- **Precondición:** Token válido de un ENTRENADOR.
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_10_ENTRENADOR_token", "recurso": "pagos", "accion": "CREAR" }
-```
-- **Resultado esperado:**
-  - HTTP 403 Forbidden
-  - `error_code`: `AUTH_UNAUTHORIZED`
   - Mensaje: `"Acceso denegado"`
 
-### ❌ Caso 10: Entrenador intenta suscribirse a un plan — denegado
+---
 
-- **Precondición:** Token válido de un ENTRENADOR.
-- **Acción:** `POST /api/auth/validar-autorizacion`
-```json
-{ "token": "jwt_10_ENTRENADOR_token", "recurso": "planes", "accion": "SUSCRIBIR" }
-```
+### ❌ Caso 5: Entrenador intenta suscribirse a un plan — acceso denegado
+
+- **Precondición:** Usuario con rol `ENTRENADOR` tiene perfil registrado y token válido.
+- **Acción:** `POST /api/auth/validar-autorizacion` con token de ENTRENADOR, `recurso: "planes"`, `accion: "SUSCRIBIR"`.
 - **Resultado esperado:**
   - HTTP 403 Forbidden
-  - `error_code`: `AUTH_UNAUTHORIZED`
+  - Mensaje: `"Acceso denegado"`
 
-### ❌ Caso 11: Token inválido o expirado
+---
 
-- **Precondición:** El token JWT no tiene el formato esperado o ha caducado.
-- **Acción:** `POST /api/auth/validar-autorizacion` con token inválido.
-```json
-{ "token": "token_invalido_xyz", "recurso": "rutinas", "accion": "VER" }
-```
+### ❌ Caso 6: Cliente intenta ver la lista de clientes — acceso denegado
+
+- **Precondición:** Usuario con rol `CLIENTE` tiene perfil registrado y token válido.
+- **Acción:** `POST /api/auth/validar-autorizacion` con token de CLIENTE, `recurso: "clientes"`, `accion: "VER"`.
+- **Resultado esperado:**
+  - HTTP 403 Forbidden
+  - Mensaje: `"Acceso denegado"`
+
+---
+
+### ❌ Caso 7: Token inválido (no decodificable)
+
+- **Precondición:** El token enviado no cumple el formato esperado.
+- **Acción:** `POST /api/auth/validar-autorizacion` con token malformado (ej: `"tokenbasura"`).
 - **Resultado esperado:**
   - HTTP 401 Unauthorized
-  - `error_code`: `AUTH_INVALID_CREDENTIALS`
-  - Mensaje descriptivo indicando que el token no es válido
+  - Mensaje: `"El token no es válido o ha expirado"`
 
-### ✅ Caso 12: Asignar rol a un usuario
+---
 
-- **Precondición:** El usuario existe en el sistema.
-- **Acción:** `POST /api/auth/roles?id_usuario=5&rol=CLIENTE`
+### ❌ Caso 8: Usuario sin perfil de permisos registrado
+
+- **Precondición:** El token es decodificable pero el `id_usuario` no tiene perfil en el repositorio de permisos.
+- **Acción:** `POST /api/auth/validar-autorizacion` con token de un usuario no registrado en el sistema de permisos.
+- **Resultado esperado:**
+  - HTTP 401 Unauthorized
+  - Mensaje: `"El token no es válido o ha expirado"`
+
+> ⚠️ **Regla de negocio:** El sistema trata igual un token malformado y un usuario sin perfil registrado — ambos retornan HTTP 401 con el mismo mensaje, para no revelar información sobre qué existe en el sistema.
+
+---
+
+### ✅ Caso 9: Asignación de rol exitosa
+
+- **Precondición:** Se quiere asignar o actualizar el rol de un usuario.
+- **Acción:** `POST /api/auth/roles?id_usuario=42&rol=CLIENTE`
 - **Resultado esperado:**
   - HTTP 200 OK
-  - Perfil de permisos creado con el rol asignado
+  - Mensaje: `"Rol 'CLIENTE' asignado correctamente al usuario 42"`
 
-### ❌ Caso 13: Revocar acceso de usuario inexistente
+---
 
-- **Precondición:** El usuario con ese ID no tiene permisos registrados.
-- **Acción:** `DELETE /api/auth/roles/{id_usuario}` con ID no existente.
+### ❌ Caso 10: Asignación de rol inválido
+
+- **Precondición:** El rol enviado no es `CLIENTE` ni `ENTRENADOR`.
+- **Acción:** `POST /api/auth/roles?id_usuario=42&rol=ADMIN`
+- **Resultado esperado:**
+  - HTTP 400 Bad Request
+  - Mensaje descriptivo indicando que el rol no es válido
+
+---
+
+### ✅ Caso 11: Revocación de acceso exitosa
+
+- **Precondición:** El usuario tiene perfil de permisos registrado.
+- **Acción:** `DELETE /api/auth/roles/42`
+- **Resultado esperado:**
+  - HTTP 200 OK
+  - Mensaje: `"Acceso revocado para el usuario 42"`
+
+---
+
+### ❌ Caso 12: Revocación de usuario inexistente
+
+- **Precondición:** El `id_usuario` no tiene perfil en el repositorio.
+- **Acción:** `DELETE /api/auth/roles/999`
 - **Resultado esperado:**
   - HTTP 404 Not Found
+  - Mensaje descriptivo indicando que no existe perfil para ese usuario
 
-### ✅ Caso 14: Listar usuarios por rol
-
-- **Precondición:** Existen usuarios con el rol indicado.
-- **Acción:** `GET /api/auth/roles/CLIENTE`
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - Lista de usuarios con rol CLIENTE
+---
 
 ## ✅ Definición de Hecho
 
 ### 📦 Alcance Funcional
 
-- [ ] El endpoint valida correctamente el rol contra el recurso y la acción solicitada usando el mapa de permisos.
-- [ ] Los clientes reciben HTTP 403 al intentar CREAR, EDITAR o ELIMINAR rutinas.
-- [ ] Los entrenadores reciben HTTP 403 al intentar acceder a pagos o planes.
-- [ ] Los tokens inválidos o con formato incorrecto retornan HTTP 401.
-- [ ] La respuesta JSON cumple con el contrato definido.
+- [ ] El endpoint valida correctamente el rol contra el recurso y la acción usando el mapa de permisos.
+- [ ] Los clientes reciben HTTP 403 al intentar `CREAR`, `EDITAR` o `ELIMINAR` rutinas.
+- [ ] Los entrenadores reciben HTTP 403 al intentar acceder a `pagos` o `planes`.
+- [ ] Los tokens inválidos y los usuarios sin perfil retornan HTTP 401 con el mismo mensaje genérico.
+- [ ] La asignación de roles valida que el rol sea `CLIENTE` o `ENTRENADOR`.
+- [ ] La revocación de acceso retorna HTTP 404 si el usuario no existe.
+- [ ] La respuesta JSON cumple con el contrato definido (sin wrapper `success/data`).
 
 ### 🧪 Pruebas Completadas
 
 - [ ] Se ejecutaron pruebas unitarias para cada funcionalidad principal.
 - [ ] Se cubrieron los casos de error y respuestas sin datos.
-- [ ] Las pruebas funcionales están documentadas y pasadas.
+- [ ] Las pruebas funcionales están documentadas y pasadas (Casos 1 al 12).
 
 ### 📄 Documentación Técnica
 
-- [ ] Endpoint documentado en Swagger / OpenAPI.
+- [ ] Los cuatro endpoints documentados en Swagger / OpenAPI.
+- [ ] Se documenta el mapa de permisos por rol con todos los recursos y acciones.
 - [ ] Se describen campos de entrada y salida con ejemplos.
-- [ ] La tabla de permisos por rol está documentada.
 
 ### 🔐 Manejo de Errores
 
-- [ ] Se devuelve código HTTP 400 para parámetros inválidos.
-- [ ] Se devuelve código HTTP 401 para token inválido o expirado.
-- [ ] Se devuelve código HTTP 403 para acceso no autorizado por rol.
-- [ ] Se devuelve código HTTP 500/503 ante fallos internos.
-- [ ] El campo `message` incluye texto descriptivo y amigable.
+- [ ] Se devuelve HTTP 422 para parámetros con formato inválido (campos vacíos o muy cortos).
+- [ ] Se devuelve HTTP 401 para token inválido o usuario sin perfil registrado.
+- [ ] Se devuelve HTTP 403 para acceso denegado por rol insuficiente.
+- [ ] Se devuelve HTTP 400 para rol no válido en asignación.
+- [ ] Se devuelve HTTP 404 para revocación de usuario inexistente.
+- [ ] Se devuelve HTTP 500/503 ante fallos internos.
+- [ ] El campo `detail` incluye texto descriptivo y amigable.
