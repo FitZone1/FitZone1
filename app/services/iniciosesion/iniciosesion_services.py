@@ -43,7 +43,7 @@ class SesionService:
         if usuario.estado != "ACTIVO":
             raise ValueError("Credenciales incorrectas")
 
-        token = generar_token(usuario.id, rol)
+        token = generar_token(usuario.id, datos.correo, rol)
 
         sesion = Sesion(
             id_usuario = usuario.id,

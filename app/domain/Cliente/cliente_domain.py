@@ -43,8 +43,9 @@ class RegistroClienteCreate(BaseModel):
 class RegistroClienteResponse(BaseModel):
     idUsuario: int
     nombre:    str
+    correo:    str   # correo con el que se registró
     rol:       str   # siempre "CLIENTE"
-    estado:    str   # "INACTIVO" hasta verificar correo
+    estado:    str   # ACTIVO | INACTIVO
 
     class Config:
         from_attributes = True
@@ -79,6 +80,7 @@ class Cliente:
         return {
             "idUsuario": self.id,
             "nombre":    self.nombre,
+            "correo":    self.correo,
             "rol":       self.rol,
             "estado":    self.estado,
         }
