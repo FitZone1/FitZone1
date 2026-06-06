@@ -15,10 +15,10 @@ class EntrenadoresDisponiblesService:
     ) -> list[EntrenadorDisponibleResponse]:
 
         if especialidad:
-            # Caso 2: filtro por especialidad (solo entre disponibles)
+            # filtro por especialidad (solo entre disponibles)
             entrenadores = self.repo.obtener_por_especialidad(especialidad)
         elif disponible:
-            # Caso 1: todos los disponibles
+            # todos los disponibles
             entrenadores = self.repo.obtener_disponibles()
         else:
             # disponible=false explícito: retornar todos sin filtro
