@@ -22,6 +22,14 @@ class PagoMensualidadCreate(BaseModel):
     metodoPago:    str           = Field(..., description="Método de pago: TARJETA, PSE o EFECTIVO")
     numeroTarjeta: Optional[str] = Field(None, description="Número de tarjeta de 16 dígitos (requerido para TARJETA y PSE)")
 
+    @field_validator("numeroTarjeta", mode="before")
+    @classmethod
+    def limpiar_tarjeta_vacia(cls, v):
+        """Convierte cadena vacía o espacios a None antes de cualquier validación."""
+        if isinstance(v, str) and v.strip() == "":
+            return None
+        return v
+
     @field_validator("metodoPago")
     @classmethod
     def metodo_valido(cls, v):
