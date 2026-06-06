@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from datetime import datetime, timezone
-from app.domain.Cliente.procesarfactura_domain import FacturaCreate
+from app.domain.Pagos.ProcesarFactura_domain import FacturaCreate
 from app.repository.Pagos.ProcesarFactura_repository import procesar_factura_repository
 from app.services.Pagos.ProcesarFactura_service import ProcesarFacturaService
 
@@ -34,7 +34,7 @@ def _error(status_code: int, message: str, error_code: str, details: str) -> JSO
     )
 
 
-# ── POST /api/pagos/facturas ──────────────────────────────────
+# #── POST /api/pagos/facturas ──────────────────────────────────
 @router.post("/")
 def generar_factura(datos: FacturaCreate):
     """Genera una factura electrónica para un pago aprobado."""
