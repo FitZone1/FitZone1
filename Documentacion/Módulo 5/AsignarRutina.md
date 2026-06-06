@@ -22,6 +22,7 @@
 - [ ] Solo se pueden asignar rutinas que pertenezcan al entrenador autenticado.
 - [ ] La rutina asignada es visible para todos los clientes con sesión en ese día de la semana.
 - [ ] Se puede reasignar una rutina diferente a un día ya asignado.
+- [ ] El campo `diaSemana` solo acepta valores del conjunto: LUNES, MARTES, MIÉRCOLES, JUEVES, VIERNES, SÁBADO, DOMINGO.
 
 ### 2. 📆 Estructura de la información
 
@@ -54,25 +55,6 @@
 }
 ```
 
-## 🔧 Notas Técnicas
-
-- **Método HTTP:** `POST`
-- **Ruta:** `/api/rutinas/asignar`
-
-## 📤 Ejemplo de Respuesta JSON
-
-```json
-{
-  "success": true,
-  "message": "Rutina asignada correctamente",
-  "data": {
-    "idRutina": 24,
-    "nombre": "Rutina Full Body Semana 1",
-    "diaSemana": "LUNES"
-  }
-}
-```
-
 - [ ] Si la rutina no pertenece al entrenador autenticado, el backend retorna:
 
 ```json
@@ -88,13 +70,33 @@
 }
 ```
 
+## 🔧 Notas Técnicas
+
+- **Método HTTP:** `POST`
+- **Ruta:** `/api/rutinas/asignar`
+- El campo `diaSemana` debe enviarse en mayúsculas y en español.
+
+## 📤 Ejemplo de Respuesta JSON
+
+```json
+{
+  "success": true,
+  "message": "Rutina asignada correctamente",
+  "data": {
+    "idRutina": 24,
+    "nombre": "Rutina Full Body Semana 1",
+    "diaSemana": "LUNES"
+  }
+}
+```
+
 ## 🧪 Requisitos de prueba
 
 ### Casos de prueba funcional
 
-### ✅ Caso 1: Asignación exitosa de rutina
+### ✅ Caso 1: Asignación exitosa de rutina a un día libre
 
-- **Precondición:** La rutina existe y pertenece al entrenador autenticado.
+- **Precondición:** La rutina existe, pertenece al entrenador autenticado y el día no tiene rutina asignada.
 - **Acción:** `POST /api/rutinas/asignar` con idRutina, idEntrenador y diaSemana válidos.
 - **Resultado esperado:**
   - HTTP 201 Created
@@ -131,6 +133,50 @@
   - `error_code`: `RUT_UNAUTHORIZED_EDIT`
   - Mensaje: `"Sin permisos"`
 
+### ❌ Caso 5: Cliente intenta asignar una rutina
+
+- **Precondición:** Usuario autenticado con rol CLIENTE.
+- **Acción:** `POST /api/rutinas/asignar` con token de cliente y body válido.
+- **Resultado esperado:**
+  - HTTP 403 Forbidden
+  - Campo `success: false`
+  - `error_code`: `AUTH_UNAUTHORIZED`
+  - Mensaje: `"Acceso denegado"`
+
+### ❌ Caso 6: Solicitud sin token de autenticación
+
+- **Precondición:** No se envía header de autenticación.
+- **Acción:** `POST /api/rutinas/asignar` sin header `Authorization`.
+- **Resultado esperado:**
+  - HTTP 401 Unauthorized
+  - Campo `success: false`
+  - `error_code`: `AUTH_MISSING_TOKEN`
+  - Mensaje: `"Token de autenticación requerido"`
+
+### ❌ Caso 7: Valor de `diaSemana` inválido
+
+- **Precondición:** El entrenador está autenticado y la rutina existe.
+- **Acción:** `POST /api/rutinas/asignar` con `diaSemana: "FUNDAY"` u otro valor no permitido.
+- **Resultado esperado:**
+  - HTTP 422 Unprocessable Entity
+  - Mensaje de validación indicando los valores aceptados para `diaSemana`
+
+### ❌ Caso 8: `idRutina` o `idEntrenador` con valor cero o negativo
+
+- **Precondición:** El entrenador está autenticado.
+- **Acción:** `POST /api/rutinas/asignar` con `idRutina: 0` o `idEntrenador: -1`.
+- **Resultado esperado:**
+  - HTTP 422 Unprocessable Entity
+  - Mensaje de validación indicando que los IDs deben ser mayores a `0`
+
+### ❌ Caso 9: Campo `diaSemana` ausente en el body
+
+- **Precondición:** El entrenador está autenticado y la rutina existe.
+- **Acción:** `POST /api/rutinas/asignar` sin el campo `diaSemana`.
+- **Resultado esperado:**
+  - HTTP 422 Unprocessable Entity
+  - Mensaje de validación indicando que `diaSemana` es un campo requerido
+
 ## ✅ Definición de Hecho
 
 ### 📦 Alcance Funcional
@@ -138,6 +184,8 @@
 - [ ] La rutina se asigna correctamente al día de la semana indicado.
 - [ ] Solo se asignan rutinas que pertenecen al entrenador autenticado.
 - [ ] La rutina asignada es visible de inmediato para los clientes con sesión ese día.
+- [ ] Los clientes no pueden asignar rutinas y reciben HTTP 403.
+- [ ] Las solicitudes sin token reciben HTTP 401.
 - [ ] La respuesta JSON cumple con el contrato definido.
 
 ### 🧪 Pruebas Completadas
@@ -154,6 +202,9 @@
 ### 🔐 Manejo de Errores
 
 - [ ] Se devuelve código HTTP 400 para parámetros inválidos.
-- [ ] Se devuelve código HTTP 401/403 para acceso no autorizado.
+- [ ] Se devuelve código HTTP 401 para solicitudes sin token.
+- [ ] Se devuelve código HTTP 403 para acceso no autorizado.
+- [ ] Se devuelve código HTTP 404 para rutina no encontrada.
+- [ ] Se devuelve código HTTP 422 para datos de entrada con formato inválido.
 - [ ] Se devuelve código HTTP 500/503 ante fallos internos.
 - [ ] El campo `mensaje` incluye texto descriptivo y amigable.
