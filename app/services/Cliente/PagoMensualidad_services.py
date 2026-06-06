@@ -38,7 +38,6 @@ class PagoMensualidadService:
         # Regla de negocio: llamar a la pasarela solo si el método la requiere.
         # Para EFECTIVO no se invoca pasarela con tarjeta; se aprueba directamente.
         if datos.metodoPago in METODOS_CON_TARJETA:
-            # numeroTarjeta ya fue validado como obligatorio en el domain validator
             estado = pasarela_pago(datos.numeroTarjeta, monto)
         else:
             # EFECTIVO: aprobación directa (el cajero confirma el pago presencial)
@@ -49,12 +48,14 @@ class PagoMensualidadService:
             raise PermissionError("PAY_PAYMENT_DECLINED")
 
         pago = self.repo.crear(
-            id_pago    = id_pago,
-            id_cliente = datos.idCliente,
-            id_plan    = datos.idPlan,
-            monto      = monto,
-            estado     = estado,
-            fecha      = fecha,
+            id_pago        = id_pago,
+            id_cliente     = datos.idCliente,
+            id_plan        = datos.idPlan,
+            monto          = monto,
+            estado         = estado,
+            fecha          = fecha,
+            metodo_pago    = datos.metodoPago,
+            numero_tarjeta = datos.numeroTarjeta,
         )
         return PagoMensualidadResponse(**pago.to_response())
 
