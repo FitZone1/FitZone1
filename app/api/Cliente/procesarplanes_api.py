@@ -1,5 +1,9 @@
-from fastapi import APIRouter, HTTPException, status
-from app.domain.Cliente.procesarplanes_domain import SuscribirPlanCreate, PlanResponse, SuscripcionResponse
+from fastapi import APIRouter, status
+from fastapi.responses import JSONResponse
+from datetime import datetime, timezone
+from app.domain.Cliente.procesarplanes_domain import (
+    PlanCreate, PlanUpdate, SuscribirPlanCreate,
+)
 from app.repository.Cliente.procesarplanes_repository import procesar_planes_repository
 from app.services.Cliente.procesarplanes_services import ProcesarPlanesService
 
@@ -11,41 +15,131 @@ router = APIRouter(
 service = ProcesarPlanesService(repo=procesar_planes_repository)
 
 
+# ── Helpers ───────────────────────────────────────────────────
+def _ts() -> str:
+    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+
+def _error(status_code: int, message: str, error_code: str, details: str) -> JSONResponse:
+    return JSONResponse(
+        status_code=status_code,
+        content={
+            "success":    False,
+            "statusCode": status_code,
+            "message":    message,
+            "error": {
+                "error_code": error_code,
+                "details":    details,
+                "timestamp":  _ts(),
+            },
+        }
+    )
+
+
 # ── GET /api/pagos/planes ─────────────────────────────────────
-@router.get("/", response_model=list[PlanResponse])
+@router.get("/")
 def listar_planes():
     """Retorna todos los planes de suscripción activos."""
     try:
-        return service.listar_planes()
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
+        planes = service.listar_planes()
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "Planes obtenidos correctamente",
+                "data":    [p.model_dump() for p in planes],
+            }
         )
+    except ValueError:
+        return _error(404, "Sin planes disponibles", "PAY_NO_PLANS_FOUND",
+                      "No hay planes de suscripción activos en el sistema")
+
+
+# ── POST /api/pagos/planes ────────────────────────────────────
+@router.post("/", status_code=status.HTTP_201_CREATED)
+def crear_plan(datos: PlanCreate):
+    """Crea un nuevo plan de suscripción."""
+    plan = service.crear_plan(datos)
+    return JSONResponse(
+        status_code=status.HTTP_201_CREATED,
+        content={
+            "success": True,
+            "message": "Plan creado correctamente",
+            "data":    plan.model_dump(),
+        }
+    )
+
+
+# ── PUT /api/pagos/planes/{id_plan} ───────────────────────────
+@router.put("/{id_plan}")
+def actualizar_plan(id_plan: int, datos: PlanUpdate):
+    """Actualiza los datos de un plan existente."""
+    try:
+        plan = service.actualizar_plan(id_plan, datos)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "Plan actualizado correctamente",
+                "data":    plan.model_dump(),
+            }
+        )
+    except ValueError:
+        return _error(404, "Plan no disponible", "PAY_PLAN_NOT_FOUND",
+                      "El plan seleccionado no existe o fue dado de baja")
+
+
+# ── DELETE /api/pagos/planes/{id_plan} ────────────────────────
+@router.delete("/{id_plan}")
+def dar_de_baja_plan(id_plan: int):
+    """Da de baja lógica un plan (no lo elimina)."""
+    try:
+        resultado = service.dar_de_baja_plan(id_plan)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "Plan dado de baja correctamente",
+                "data":    resultado.model_dump(),
+            }
+        )
+    except ValueError:
+        return _error(404, "Plan no disponible", "PAY_PLAN_NOT_FOUND",
+                      "El plan seleccionado no existe o fue dado de baja")
 
 
 # ── POST /api/pagos/planes/suscribir ─────────────────────────
-@router.post("/suscribir", response_model=SuscripcionResponse,
-             status_code=status.HTTP_201_CREATED)
+@router.post("/suscribir")
 def suscribir_plan(datos: SuscribirPlanCreate):
     """Suscribe al cliente a un plan de membresía."""
     try:
-        return service.suscribir(datos)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
+        suscripcion = service.suscribir(datos)
+        return JSONResponse(
+            status_code=status.HTTP_201_CREATED,
+            content={
+                "success": True,
+                "message": "Suscripción activada correctamente",
+                "data":    suscripcion.model_dump(),
+            }
         )
+    except ValueError:
+        return _error(404, "Plan no disponible", "PAY_PLAN_NOT_FOUND",
+                      "El plan seleccionado no existe o fue dado de baja")
 
 
 # ── GET /api/pagos/planes/cliente/{id_cliente} ────────────────
-@router.get("/cliente/{id_cliente}", response_model=SuscripcionResponse)
+@router.get("/cliente/{id_cliente}")
 def obtener_suscripcion(id_cliente: int):
     """Retorna la suscripción activa de un cliente."""
     try:
-        return service.obtener_suscripcion(id_cliente)
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
+        suscripcion = service.obtener_suscripcion(id_cliente)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={
+                "success": True,
+                "message": "Suscripción obtenida correctamente",
+                "data":    suscripcion.model_dump(),
+            }
         )
+    except ValueError as e:
+        return _error(404, "Sin suscripción activa", "PAY_SUBSCRIPTION_NOT_FOUND",
+                      str(e))
