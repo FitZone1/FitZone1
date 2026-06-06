@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from datetime import datetime, timezone
-from app.domain.Pagos.procesarfactura_domain import FacturaCreate
+from app.domain.Cliente.procesarfactura_domain import FacturaCreate
 from app.repository.Pagos.ProcesarFactura_repository import procesar_factura_repository
 from app.services.Pagos.ProcesarFactura_service import ProcesarFacturaService
 
