@@ -29,28 +29,27 @@ class PagoMensualidadCreate(BaseModel):
             raise ValueError(f"Método de pago no válido. Use uno de: {METODOS_VALIDOS}")
         return v.upper()
 
-    @field_validator("numeroTarjeta")
-    @classmethod
-    def tarjeta_solo_digitos(cls, v):
-        if v is None:
-            return v
-        if not v.isdigit():
-            raise ValueError("El número de tarjeta solo puede contener dígitos")
-        if len(v) != 16:
-            raise ValueError("El número de tarjeta debe tener exactamente 16 dígitos")
-        return v
-
     @model_validator(mode="after")
     def validar_tarjeta_segun_metodo(self):
         """
         REGLA DE NEGOCIO:
-        - Si el método es TARJETA o PSE, el número de tarjeta es obligatorio.
-        - Si el método es EFECTIVO, el número de tarjeta no se requiere ni se valida.
+        - Si el método es TARJETA o PSE: numeroTarjeta es obligatorio y debe
+          tener exactamente 16 dígitos numéricos.
+        - Si el método es EFECTIVO: numeroTarjeta se ignora sin importar
+          qué valor venga (incluyendo el placeholder 'string' de Swagger).
         """
-        if self.metodoPago in METODOS_CON_TARJETA and not self.numeroTarjeta:
-            raise ValueError(
-                "El método de pago seleccionado requiere número de tarjeta"
-            )
+        if self.metodoPago in METODOS_CON_TARJETA:
+            # Requiere tarjeta
+            if not self.numeroTarjeta:
+                raise ValueError("El método de pago seleccionado requiere número de tarjeta")
+            if not self.numeroTarjeta.isdigit():
+                raise ValueError("El número de tarjeta solo puede contener dígitos")
+            if len(self.numeroTarjeta) != 16:
+                raise ValueError("El número de tarjeta debe tener exactamente 16 dígitos")
+        else:
+            # EFECTIVO: limpiar cualquier valor que venga, no se necesita
+            self.numeroTarjeta = None
+
         return self
 
 
