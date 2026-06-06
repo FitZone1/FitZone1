@@ -1,7 +1,7 @@
 from app.domain.Cliente.procesarfactura_domain import (
     FacturaCreate, FacturaResponse,
 )
-from FitZone1.app.repository.Pagos.ProcesarFactura_repository import ProcesarFacturaRepository
+from app.repository.Pagos.ProcesarFactura_repository import ProcesarFacturaRepository
 
 
 class ProcesarFacturaService:
