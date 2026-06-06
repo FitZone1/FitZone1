@@ -1,5 +1,5 @@
 ## [HU-10] Procesar factura electrónica
-
+#
 ### 📖 Historia de usuario
 
 **Como** Cliente del gimnasio
