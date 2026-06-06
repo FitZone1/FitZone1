@@ -3,7 +3,22 @@ from typing import Optional
 from datetime import datetime, timedelta
 
 
-# ── Schema de ENTRADA — suscripción ──────────────────────────
+# ── Schema de ENTRADA — crear plan ───────────────────────────
+class PlanCreate(BaseModel):
+    nombre:       str   = Field(..., min_length=1, description="Nombre del plan")
+    monto:        float = Field(..., gt=0, description="Precio del plan en pesos")
+    duracionDias: int   = Field(..., gt=0, description="Duración del plan en días")
+
+
+# ── Schema de ENTRADA — actualizar plan ──────────────────────
+class PlanUpdate(BaseModel):
+    nombre:       Optional[str]   = Field(None, min_length=1, description="Nuevo nombre del plan")
+    monto:        Optional[float] = Field(None, gt=0, description="Nuevo precio del plan")
+    duracionDias: Optional[int]   = Field(None, gt=0, description="Nueva duración en días")
+    activo:       Optional[bool]  = Field(None, description="Estado activo/inactivo del plan")
+
+
+# ── Schema de ENTRADA — suscribir cliente a plan ─────────────
 class SuscribirPlanCreate(BaseModel):
     idCliente: int = Field(..., gt=0, description="ID del cliente")
     idPlan:    int = Field(..., gt=0, description="ID del plan a suscribir")
@@ -32,7 +47,16 @@ class SuscripcionResponse(BaseModel):
         from_attributes = True
 
 
-# ── Modelos internos del dominio ──────────────────────────────
+# ── Schema de SALIDA — baja de plan ──────────────────────────
+class PlanDeleteResponse(BaseModel):
+    idPlan: int
+    activo: bool   # siempre False tras la baja
+
+    class Config:
+        from_attributes = True
+
+
+# ── Modelo interno — Plan ─────────────────────────────────────
 class Plan:
     def __init__(self, id: int, nombre: str, monto: float,
                  duracion_dias: int, activo: bool = True):
@@ -42,12 +66,17 @@ class Plan:
         self.duracion_dias = duracion_dias
         self.activo        = activo
 
-    # REGLA DE NEGOCIO: solo planes activos pueden suscribirse
+    # REGLA DE NEGOCIO: solo planes activos son visibles al cliente
     def esta_activo(self) -> bool:
         return self.activo
 
+    # REGLA DE NEGOCIO: la vigencia se calcula desde la fecha actual
     def calcular_vigencia(self) -> str:
         return (datetime.now() + timedelta(days=self.duracion_dias)).strftime("%Y-%m-%d")
+
+    # REGLA DE NEGOCIO: dar de baja es lógico (no se elimina el registro)
+    def dar_de_baja(self) -> None:
+        self.activo = False
 
     def to_response(self) -> dict:
         return {
@@ -57,7 +86,14 @@ class Plan:
             "duracionDias": self.duracion_dias,
         }
 
+    def to_delete_response(self) -> dict:
+        return {
+            "idPlan": self.id,
+            "activo": self.activo,
+        }
 
+
+# ── Modelo interno — Suscripcion ──────────────────────────────
 class Suscripcion:
     def __init__(self, id: int, id_cliente: int, id_plan: int,
                  nombre_plan: str, monto: float, vigencia: str):
