@@ -1,4 +1,4 @@
-from app.domain.Cliente.procesarfactura_domain import (
+from app.domain.Pagos.ProcesarFactura_domain import (
     FacturaCreate, FacturaResponse,
 )
 from app.repository.Pagos.ProcesarFactura_repository import ProcesarFacturaRepository

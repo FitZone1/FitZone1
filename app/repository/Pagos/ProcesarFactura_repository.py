@@ -1,4 +1,4 @@
-from app.domain.Cliente.procesarfactura_domain import Pago, Factura
+from app.domain.Pagos.ProcesarFactura_domain import Pago, Factura
 from datetime import datetime, timezone
 from typing import Optional
 
