@@ -14,10 +14,10 @@ class ProcesarFacturaRepository:
     def _seed(self):
         """Pagos de ejemplo para que los casos de prueba funcionen autónomamente."""
         self._pagos = [
-            Pago("PAY-987654", 42, 85000, "APROBADO",  "Plan Mensual Premium"),
-            Pago("PAY-111111", 10, 55000, "APROBADO",  "Plan Básico"),
-            Pago("PAY-222222", 15, 85000, "RECHAZADO", "Plan Mensual Premium"),
-            Pago("PAY-333333", 20, 85000, "PENDIENTE", "Plan Mensual Premium"),
+            Pago("PAY-987654", 42, 85000, "APROBADO",  "Plan Mensual Premium", "Carlos Pérez"),
+            Pago("PAY-111111", 10, 55000, "APROBADO",  "Plan Básico",          "Ana López"),
+            Pago("PAY-222222", 15, 85000, "RECHAZADO", "Plan Mensual Premium", "Luis García"),
+            Pago("PAY-333333", 20, 85000, "PENDIENTE", "Plan Mensual Premium", "María Torres"),
         ]
         self._siguiente_factura_num = 1
 
@@ -49,11 +49,13 @@ class ProcesarFacturaRepository:
         id_factura = f"FAC-{self._siguiente_factura_num:06d}"
         fecha      = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
         nueva = Factura(
-            id_factura   = id_factura,
-            id_pago      = pago.id_pago,
-            monto        = pago.monto,
-            fecha        = fecha,
-            url_descarga = f"/facturas/{id_factura}.pdf",
+            id_factura     = id_factura,
+            id_pago        = pago.id_pago,
+            monto          = pago.monto,
+            fecha          = fecha,
+            url_descarga   = f"/facturas/{id_factura}.pdf",
+            plan           = pago.plan,
+            nombre_cliente = pago.nombre_cliente,
         )
         self._facturas.append(nueva)
         self._siguiente_factura_num += 1
