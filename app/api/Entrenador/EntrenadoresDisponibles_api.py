@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Path, status
 from fastapi.responses import JSONResponse
-from typing import Optional
 from datetime import datetime, timezone
 from app.domain.Entrenador.EntrenadoresDisponibles_domain import EntrenadorDisponibleResponse
 from app.repository.Entrenador.EntrenadoresDisponibles_repository import entrenadores_disponibles_repository
@@ -49,10 +48,7 @@ def _not_found():
 @router.get(
     "/entrenadores",
     summary="Caso 1 – Listar todos los entrenadores disponibles",
-    description=(
-        "Retorna la lista completa de entrenadores cuyo campo `disponible` es `true`. "
-        "No requiere parámetros adicionales."
-    ),
+    description="Retorna la lista completa de entrenadores cuyo campo `disponible` es `true`.",
     responses={
         200: {"description": "Lista de entrenadores disponibles"},
         404: {"description": "No hay entrenadores disponibles"},
@@ -89,17 +85,43 @@ def listar_por_especialidad(
         return _not_found()
 
 
-# ── CASO 3: Sin resultados (especialidad inexistente) ─────────
-@router.get(
-    "/entrenadores/sin-resultados",
-    summary="Caso 3 – Verificar respuesta cuando no hay entrenadores disponibles",
+# ── Cambiar disponibilidad de un entrenador ───────────────────
+@router.patch(
+    "/entrenadores/{id}/disponibilidad",
+    summary="Cambiar disponibilidad de un entrenador",
     description=(
-        "Endpoint de prueba que siempre simula el escenario donde ningún entrenador "
-        "cumple los filtros aplicados. Retorna HTTP 404 con `error_code: RES_TRAINERS_NOT_FOUND`."
+        "Cambia el estado `disponible` de un entrenador. "
+        "Útil para probar el Caso 3: pon todos en `false` y ejecuta el Caso 1."
     ),
     responses={
-        404: {"description": "Sin entrenadores disponibles con los filtros aplicados"},
+        200: {"description": "Disponibilidad actualizada"},
+        404: {"description": "Entrenador no encontrado"},
     },
 )
-def sin_entrenadores_disponibles():
-    return _not_found()
+def cambiar_disponibilidad(
+    id: int = Path(..., description="ID del entrenador (1, 2, 3 o 4)"),
+    disponible: bool = True,
+):
+    entrenador = entrenadores_disponibles_repository.actualizar_disponibilidad(id, disponible)
+    if not entrenador:
+        return JSONResponse(
+            status_code=status.HTTP_404_NOT_FOUND,
+            content={
+                "success": False,
+                "statusCode": 404,
+                "message": "Entrenador no encontrado",
+                "error": {
+                    "error_code": "RES_TRAINER_NOT_FOUND",
+                    "details": f"No existe un entrenador con id={id}",
+                    "timestamp": _ts(),
+                }
+            }
+        )
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={
+            "success": True,
+            "message": f"Disponibilidad del entrenador {id} actualizada a {disponible}",
+            "data": entrenador.to_response(),
+        }
+    )
