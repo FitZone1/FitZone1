@@ -1,14 +1,14 @@
-# ─────────────────────────────────────────────────────────────
-# CAPA API — rutas HTTP con FastAPI
-# Solo recibe peticiones y llama al servicio.
-# Aquí NO hay lógica de negocio.
-# ─────────────────────────────────────────────────────────────
-
 from fastapi import APIRouter, HTTPException, status
-from app.domain.Cliente.PagoMensualidad_domain import PagoMensualidadCreate, PagoMensualidadResponse
+from app.domain.Cliente.PagoMensualidad_domain import (
+    PagoMensualidadCreate,
+    PagoMensualidadResponse,
+    MetodoPagoResponse,
+    METODOS_CON_TARJETA,
+)
 from app.repository.Cliente.PagoMensualidad_repository import pago_mensualidad_repository
 from app.repository.Cliente.procesarplanes_repository import procesar_planes_repository
 from app.services.Cliente.PagoMensualidad_services import PagoMensualidadService
+from typing import Optional
 
 router = APIRouter(
     prefix="/api/pagos",
@@ -22,27 +22,44 @@ service = PagoMensualidadService(
 
 
 # ── Simulación de pasarela de pago ───────────────────────────
-def _pasarela_pago(numero_tarjeta: str, monto: float) -> str:
-    """Simula pasarela de pago. En producción: integración real."""
-    return "APROBADO" if numero_tarjeta != "0000000000000000" else "RECHAZADO"
+def _pasarela_pago(numero_tarjeta: Optional[str], monto: float) -> str:
+    """
+    Simula pasarela de pago.
+    Solo se invoca cuando el método requiere tarjeta (TARJETA, PSE).
+    En producción: reemplazar por integración real con la pasarela.
+    """
+    if numero_tarjeta == "0000000000000000":
+        return "RECHAZADO"
+    return "APROBADO"
+
+
+# ── GET /api/pagos/metodos ────────────────────────────────────
+@router.get("/metodos", response_model=list[MetodoPagoResponse])
+def listar_metodos_pago():
+    """Retorna la lista de métodos de pago habilitados con su flag requiereTarjeta."""
+    return service.listar_metodos()
 
 
 # ── POST /api/pagos ───────────────────────────────────────────
 @router.post("/", response_model=PagoMensualidadResponse,
              status_code=status.HTTP_201_CREATED)
 def procesar_pago(datos: PagoMensualidadCreate):
-    """Procesa el pago de la mensualidad del cliente."""
+    """
+    Procesa el pago de la mensualidad.
+    - TARJETA / PSE: requiere numeroTarjeta de 16 dígitos.
+    - EFECTIVO: no requiere numeroTarjeta.
+    """
     try:
         return service.procesar_pago(datos, _pasarela_pago)
     except PermissionError:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
-            detail="PAY_PAYMENT_DECLINED"
+            detail="PAY_PAYMENT_DECLINED",
         )
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
+            detail=str(e),
         )
 
 
@@ -55,7 +72,7 @@ def obtener_pago(id_pago: str):
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
+            detail=str(e),
         )
 
 
@@ -68,5 +85,5 @@ def pagos_por_cliente(id_cliente: int):
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
+            detail=str(e),
         )
