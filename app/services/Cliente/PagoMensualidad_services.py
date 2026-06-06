@@ -1,4 +1,10 @@
-from app.domain.Cliente.PagoMensualidad_domain import PagoMensualidadCreate, PagoMensualidadResponse
+from app.domain.Cliente.PagoMensualidad_domain import (
+    PagoMensualidadCreate,
+    PagoMensualidadResponse,
+    MetodoPagoResponse,
+    MetodoPago,
+    METODOS_CON_TARJETA,
+)
 from app.repository.Cliente.PagoMensualidad_repository import PagoMensualidadRepository
 from app.repository.Cliente.procesarplanes_repository import ProcesarPlanesRepository
 from datetime import datetime
@@ -9,9 +15,14 @@ class PagoMensualidadService:
 
     def __init__(self, repo: PagoMensualidadRepository,
                  planes_repo: ProcesarPlanesRepository):
-        self.repo       = repo
+        self.repo        = repo
         self.planes_repo = planes_repo
 
+    # ── GET /api/pagos/metodos ────────────────────────────────
+    def listar_metodos(self) -> list[MetodoPagoResponse]:
+        return [MetodoPagoResponse(**m) for m in MetodoPago.listar()]
+
+    # ── POST /api/pagos ───────────────────────────────────────
     def procesar_pago(self, datos: PagoMensualidadCreate,
                       pasarela_pago) -> PagoMensualidadResponse:
 
@@ -22,14 +33,18 @@ class PagoMensualidadService:
 
         fecha   = datetime.now().isoformat()
         id_pago = f"PAY-{random.randint(100000, 999999)}"
+        monto   = plan.monto
 
-        # Regla de negocio: el monto debe coincidir con el precio del plan
-        monto = plan.monto
+        # Regla de negocio: llamar a la pasarela solo si el método la requiere.
+        # Para EFECTIVO no se invoca pasarela con tarjeta; se aprueba directamente.
+        if datos.metodoPago in METODOS_CON_TARJETA:
+            # numeroTarjeta ya fue validado como obligatorio en el domain validator
+            estado = pasarela_pago(datos.numeroTarjeta, monto)
+        else:
+            # EFECTIVO: aprobación directa (el cajero confirma el pago presencial)
+            estado = "APROBADO"
 
-        # Llamar a la pasarela de pago externa
-        estado = pasarela_pago(datos.numeroTarjeta, monto)
-
-        # Regla de negocio: solo se aprueba si la pasarela devuelve APROBADO
+        # Regla de negocio: solo se registra si la pasarela devuelve APROBADO
         if estado != "APROBADO":
             raise PermissionError("PAY_PAYMENT_DECLINED")
 
