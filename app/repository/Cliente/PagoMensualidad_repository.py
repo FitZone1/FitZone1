@@ -10,8 +10,9 @@ class PagoMensualidadRepository:
 
     def _seed(self):
         iniciales = [
-            Pago("PAY-000001", 42, 1, 55000, "APROBADO",  "2026-02-18T10:00:00"),
-            Pago("PAY-000002", 43, 2, 85000, "RECHAZADO", "2026-02-20T11:00:00"),
+            Pago("PAY-000001", 42, 1, 55000, "APROBADO",  "2026-02-18T10:00:00", "EFECTIVO",  None),
+            Pago("PAY-000002", 43, 2, 85000, "RECHAZADO", "2026-02-20T11:00:00", "TARJETA",   "4111111111111111"),
+            Pago("PAY-000003", 10, 2, 85000, "APROBADO",  "2026-03-01T09:00:00", "PSE",       "4222222222222222"),
         ]
         self._datos = iniciales
 
@@ -25,14 +26,17 @@ class PagoMensualidadRepository:
         return [p for p in self._datos if p.id_cliente == id_cliente]
 
     def crear(self, id_pago: str, id_cliente: int, id_plan: int,
-              monto: float, estado: str, fecha: str) -> Pago:
+              monto: float, estado: str, fecha: str,
+              metodo_pago: str, numero_tarjeta: Optional[str] = None) -> Pago:
         nuevo = Pago(
-            id_pago    = id_pago,
-            id_cliente = id_cliente,
-            id_plan    = id_plan,
-            monto      = monto,
-            estado     = estado,
-            fecha      = fecha,
+            id_pago        = id_pago,
+            id_cliente     = id_cliente,
+            id_plan        = id_plan,
+            monto          = monto,
+            estado         = estado,
+            fecha          = fecha,
+            metodo_pago    = metodo_pago,
+            numero_tarjeta = numero_tarjeta,
         )
         self._datos.append(nuevo)
         return nuevo
