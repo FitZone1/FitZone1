@@ -3,8 +3,8 @@
 ### 📖 Historia de usuario
 
 **Como** Cliente del gimnasio
-**Quiero** Recibir y descargar mi factura electrónica después de cada pago realizado
-**Para** Tener un comprobante legal de mis transacciones con el gimnasio y consultarlo en cualquier momento
+**Quiero** Generar y consultar mi factura electrónica después de cada pago realizado
+**Para** Tener un comprobante de mis transacciones con el gimnasio y consultarlo en cualquier momento
 
 ## 🔁 Flujo esperado
 
@@ -12,7 +12,7 @@
 - El cliente accede a la sección de facturas en su panel.
 - El sistema consume el endpoint `POST /api/pagos/facturas` con idPago e idCliente.
 - El backend valida que exista un pago aprobado con el ID proporcionado y que pertenezca al cliente.
-- Se genera la factura y se retorna la URL de descarga en formato PDF.
+- Se genera la factura y se retornan sus datos completos en JSON (idFactura, monto, fecha, plan, nombreCliente).
 - Si el cliente intenta generar la factura de un pago ya facturado, se retorna la factura existente sin crear una nueva.
 
 ## Criterios de aceptación
@@ -24,7 +24,7 @@
 - [ ] Si el pago tiene estado RECHAZADO o PENDIENTE, se retorna error 404 igual que si no existiera.
 - [ ] Si el idCliente no coincide con el dueño del pago, se retorna error 404.
 - [ ] Si ya existe una factura para el pago, se retorna la factura existente sin crear duplicados.
-- [ ] Se expone un endpoint `GET /api/pagos/facturas/{idFactura}` para consultar y descargar la factura.
+- [ ] Se expone un endpoint `GET /api/pagos/facturas/{idFactura}` para consultar los datos de la factura en JSON.
 - [ ] La factura incluye fecha, monto, plan, nombre del cliente y número de factura.
 
 ### 2. 📆 Estructura de la información
@@ -40,7 +40,8 @@
     "idPago": "PAY-987654",
     "monto": 85000,
     "fecha": "2026-03-18T10:30:00",
-    "urlDescarga": "/facturas/FAC-001234.pdf"
+    "plan": "Plan Mensual Premium",
+    "nombreCliente": "Angela Torres"
   }
 }
 ```
@@ -79,7 +80,8 @@
     "idPago": "PAY-987654",
     "monto": 85000,
     "fecha": "2026-03-18T10:30:00",
-    "urlDescarga": "/facturas/FAC-000001.pdf"
+    "plan": "Plan Mensual Premium",
+    "nombreCliente": "Angela Torres"
   }
 }
 ```
@@ -111,16 +113,16 @@
   - HTTP 201 Created
   - Campo `success: true`
   - `idFactura` generado con formato `FAC-XXXXXX`
-  - `urlDescarga` disponible con formato `/facturas/FAC-XXXXXX.pdf`
+  - Datos completos de la factura: monto, fecha, plan, nombreCliente
 
-### ✅ Caso 2: Descarga exitosa de factura
+### ✅ Caso 2: Consulta exitosa de factura
 
 - **Precondición:** La factura existe en el sistema.
 - **Acción:** `GET /api/pagos/facturas/FAC-000001`
 - **Resultado esperado:**
   - HTTP 200 OK
   - Campo `success: true`
-  - `urlDescarga` presente en la respuesta
+  - Datos completos de la factura en JSON: idFactura, idPago, monto, fecha, plan, nombreCliente
 
 ### ✅ Caso 3: Factura duplicada — retorna la existente
 
@@ -179,7 +181,7 @@
 - [ ] La factura se genera únicamente para pagos con estado APROBADO.
 - [ ] No se generan facturas duplicadas para el mismo pago.
 - [ ] Solo el cliente dueño del pago puede generar su factura.
-- [ ] La URL de descarga sigue el formato `/facturas/FAC-XXXXXX.pdf`.
+- [ ] Los datos retornados incluyen: idFactura, idPago, monto, fecha, plan y nombreCliente.
 - [ ] La respuesta JSON cumple con el contrato definido en todos los casos.
 
 ### 🧪 Pruebas Completadas
