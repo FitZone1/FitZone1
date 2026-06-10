@@ -1,4 +1,4 @@
-from app.domain.Pagos.ProcesarFactura_domain import Pago, Factura
+from app.domain.Pagos.ProcesarFactura_domain import Factura
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -6,29 +6,20 @@ from typing import Optional
 class ProcesarFacturaRepository:
 
     def __init__(self):
-        self._pagos: list[Pago] = []
         self._facturas: list[Factura] = []
         self._siguiente_factura_num: int = 1
-        self._seed()
 
-    def _seed(self):
-        """Pagos de ejemplo para que los casos de prueba funcionen autónomamente."""
-        self._pagos = [
-            Pago("PAY-987654", 42, 85000, "APROBADO",  "Plan Mensual Premium", "Carlos Pérez"),
-            Pago("PAY-111111", 10, 55000, "APROBADO",  "Plan Básico",          "Ana López"),
-            Pago("PAY-222222", 15, 85000, "RECHAZADO", "Plan Mensual Premium", "Luis García"),
-            Pago("PAY-333333", 20, 85000, "PENDIENTE", "Plan Mensual Premium", "María Torres"),
-        ]
-        self._siguiente_factura_num = 1
-
-    # ── Pagos ─────────────────────────────────────────────────
-
-    def obtener_pago(self, id_pago: str, id_cliente: int) -> Optional[Pago]:
-        return next(
-            (p for p in self._pagos
-             if p.id_pago == id_pago and p.id_cliente == id_cliente),
-            None
-        )
+    # ── Pagos — delega al repositorio real de pagos ───────────
+    def obtener_pago(self, id_pago: str, id_cliente: int):
+        """
+        Busca el pago en el repositorio de PagoMensualidad (fuente de verdad).
+        Retorna el pago solo si pertenece al cliente indicado.
+        """
+        from app.repository.Cliente.PagoMensualidad_repository import pago_mensualidad_repository
+        pago = pago_mensualidad_repository.obtener_por_id(id_pago)
+        if pago and pago.id_cliente == id_cliente:
+            return pago
+        return None
 
     # ── Facturas ──────────────────────────────────────────────
 
@@ -45,7 +36,7 @@ class ProcesarFacturaRepository:
             None
         )
 
-    def crear_factura(self, pago: Pago) -> Factura:
+    def crear_factura(self, pago) -> Factura:
         id_factura = f"FAC-{self._siguiente_factura_num:06d}"
         fecha      = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
         nueva = Factura(
@@ -54,8 +45,8 @@ class ProcesarFacturaRepository:
             monto          = pago.monto,
             fecha          = fecha,
             url_descarga   = f"/facturas/{id_factura}.pdf",
-            plan           = pago.plan,
-            nombre_cliente = pago.nombre_cliente,
+            plan           = str(pago.id_plan),  # PagoMensualidad guarda id_plan (int)
+            nombre_cliente = f"Cliente {pago.id_cliente}",
         )
         self._facturas.append(nueva)
         self._siguiente_factura_num += 1

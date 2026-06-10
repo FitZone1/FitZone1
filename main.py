@@ -16,6 +16,12 @@ from app.api.Cliente.procesarplanes_api import router as procesar_planes_router
 from app.api.Cliente.PagoMensualidad_api import router as pagos_mesualidad_router
 from app.api.ControlPermisos.ControlPermisos_api import router as control_permisos_router  
 from app.api.Cliente.procesarplanes_api import router as procesar_planes_router
+<<<<<<< HEAD
+=======
+from app.api.Pagos.ProcesarFactura_api import router as procesar_facturas_router
+from app.api.Entrenador.CargarRutina_api import router as cargar_rutina_router
+
+>>>>>>> 938b4d82232df3e7f17ac0d4c68078aeab59e7eb
 # Crear la aplicación con metadata para la documentación
 app = FastAPI(
     title="FitZone API",
@@ -37,8 +43,13 @@ app.include_router(procesar_planes_router)
 app.include_router(pagos_mesualidad_router)
 app.include_router(procesar_planes_router)
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
+=======
+app.include_router(procesar_facturas_router)
+app.include_router(cargar_rutina_router)
+>>>>>>> 938b4d82232df3e7f17ac0d4c68078aeab59e7eb
 
 >>>>>>> c6de63c9d43139a7b7b890195d028cbc0943d3e3
 # Ruta raíz — bienvenida

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 from typing import List
 
 
@@ -12,25 +12,10 @@ class GestionHorariosCreate(BaseModel):
     horaInicio:      str       = Field(..., description="Hora de inicio (HH:MM)")
     horaFin:         str       = Field(..., description="Hora de fin (HH:MM)")
 
-    @field_validator("diasDisponibles")
-    @classmethod
-    def dias_validos(cls, v):
-        for dia in v:
-            if dia.upper() not in DIAS_VALIDOS:
-                raise ValueError(f"Día '{dia}' no válido. Use: {DIAS_VALIDOS}")
-        return [d.upper() for d in v]
-
-    @field_validator("horaFin")
-    @classmethod
-    def rango_horario_valido(cls, v, info):
-        hora_inicio = info.data.get("horaInicio")
-        if hora_inicio and v <= hora_inicio:
-            raise ValueError("La hora de inicio no puede ser mayor a la hora de fin")
-        return v
-
 
 # ── Schema de SALIDA ──────────────────────────────────────────
 class GestionHorariosResponse(BaseModel):
+    idHorario:       int
     idEntrenador:    int
     diasDisponibles: List[str]
     horaInicio:      str
@@ -50,16 +35,15 @@ class HorarioDisponible:
         self.hora_inicio      = hora_inicio
         self.hora_fin         = hora_fin
 
-    # REGLA DE NEGOCIO: hora inicio debe ser menor que hora fin
     def rango_valido(self) -> bool:
         return self.hora_inicio < self.hora_fin
 
-    # REGLA DE NEGOCIO: el día debe estar en la lista de disponibles
     def dia_disponible(self, dia: str) -> bool:
         return dia.upper() in self.dias_disponibles
 
     def to_response(self) -> dict:
         return {
+            "idHorario":       self.id,
             "idEntrenador":    self.id_entrenador,
             "diasDisponibles": self.dias_disponibles,
             "horaInicio":      self.hora_inicio,

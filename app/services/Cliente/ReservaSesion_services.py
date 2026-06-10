@@ -38,5 +38,5 @@ class ReservaSesionService:
     def obtener(self, id: int) -> ReservaSesionResponse:
         r = self.repo.obtener_por_id(id)
         if not r:
-            raise ValueError(f"Reserva con id {id} no encontrada")
+            raise ValueError("RES_ID_NOT_FOUND")
         return ReservaSesionResponse(**r.to_response())
