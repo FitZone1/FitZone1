@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, status
+from fastapi import APIRouter, Path, Query, status
 from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 from app.domain.Entrenador.EntrenadoresDisponibles_domain import EntrenadorDisponibleResponse
@@ -44,10 +44,10 @@ def _not_found():
     )
 
 
-# ── CASO 1: Todos los entrenadores disponibles ────────────────
+# ── Listar todos los entrenadores disponibles ─────────────────
 @router.get(
     "/entrenadores",
-    summary="Caso 1 – Listar todos los entrenadores disponibles",
+    summary="Listar entrenadores disponibles",
     description="Retorna la lista completa de entrenadores cuyo campo `disponible` es `true`.",
     responses={
         200: {"description": "Lista de entrenadores disponibles"},
@@ -62,10 +62,10 @@ def listar_entrenadores_disponibles():
         return _not_found()
 
 
-# ── CASO 2: Filtro por especialidad ───────────────────────────
+# ── Filtrar entrenadores por especialidad ─────────────────────
 @router.get(
     "/entrenadores/especialidad/{especialidad}",
-    summary="Caso 2 – Filtrar entrenadores disponibles por especialidad",
+    summary="Filtrar entrenadores por especialidad",
     description=(
         "Retorna los entrenadores disponibles que coincidan con la especialidad indicada. "
         "Ejemplo: `/api/reservas/entrenadores/especialidad/Musculación`"
@@ -89,10 +89,7 @@ def listar_por_especialidad(
 @router.patch(
     "/entrenadores/{id}/disponibilidad",
     summary="Cambiar disponibilidad de un entrenador",
-    description=(
-        "Cambia el estado `disponible` de un entrenador. "
-        "Útil para probar el Caso 3: pon todos en `false` y ejecuta el Caso 1."
-    ),
+    description="Cambia el estado `disponible` de un entrenador.",
     responses={
         200: {"description": "Disponibilidad actualizada"},
         404: {"description": "Entrenador no encontrado"},
@@ -100,7 +97,7 @@ def listar_por_especialidad(
 )
 def cambiar_disponibilidad(
     id: int = Path(..., description="ID del entrenador (1, 2, 3 o 4)"),
-    disponible: bool = True,
+    disponible: bool = Query(..., description="Estado de disponibilidad (true o false)"),
 ):
     entrenador = entrenadores_disponibles_repository.actualizar_disponibilidad(id, disponible)
     if not entrenador:

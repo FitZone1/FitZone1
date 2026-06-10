@@ -16,6 +16,9 @@ from app.api.ControlPermisos.ControlPermisos_api import router as control_permis
 from app.api.Cliente.procesarplanes_api import router as procesar_planes_router
 from app.api.Pagos.ProcesarFactura_api import router as procesar_factura_router
 
+from app.api.Pagos.ProcesarFactura_api import router as procesar_facturas_router
+from app.api.Entrenador.CargarRutina_api import router as cargar_rutina_router
+
 
 # Crear la aplicación con metadata para la documentación
 app = FastAPI(
