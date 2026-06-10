@@ -1,32 +1,38 @@
-## [HU-11] Procesar planes de suscripción
+## [HU-11] Gestionar planes de suscripción
 
 ### 📖 Historia de usuario
 
-**Como** Cliente del gimnasio
-**Quiero** Consultar, seleccionar y suscribirme a un plan de membresía disponible en la plataforma
-**Para** Acceder al nivel de servicio que mejor se ajuste a mis necesidades y presupuesto
+**Como** Administrador del gimnasio
+**Quiero** Crear, consultar, actualizar y eliminar los planes de membresía disponibles en la plataforma
+**Para** Mantener actualizado el catálogo de planes que los clientes pueden adquirir al momento de pagar su mensualidad
 
 ## 🔁 Flujo esperado
 
-- El cliente accede a la sección de planes en la plataforma.
-- El sistema consume el endpoint `GET /api/pagos/planes` para listar los planes disponibles.
-- El cliente selecciona un plan y confirma la suscripción.
-- El sistema consume el endpoint `POST /api/pagos/planes/suscribir` con idCliente e idPlan.
-- El backend valida que el plan exista y esté activo en el sistema.
-- La suscripción queda activa con su fecha de vigencia y el cliente puede comenzar a reservar sesiones.
+- El administrador accede a la sección de gestión de planes.
+- Puede listar todos los planes activos e inactivos del sistema.
+- Puede crear un nuevo plan con nombre, monto y duración en días.
+- Puede consultar el detalle de un plan específico por su ID.
+- Puede actualizar los datos de un plan existente.
+- Puede eliminar (dar de baja) un plan cuando ya no esté disponible.
+- Los planes activos son visibles para los clientes al momento de realizar el pago de mensualidad.
+
+> **Nota:** La suscripción de un cliente a un plan se gestiona en el flujo de **Pago de Mensualidad** (`POST /api/pagos`), no en este módulo.
 
 ## Criterios de aceptación
 
 ### 1. 🔍 Estructura y lógica del servicio
 
-- [ ] Se expone un endpoint `GET /api/pagos/planes` que retorna todos los planes activos con nombre, monto y duración.
-- [ ] Se expone un endpoint `POST /api/pagos/planes/suscribir` que recibe idCliente e idPlan.
-- [ ] Solo puede haber un plan activo por cliente a la vez.
-- [ ] El plan seleccionado debe existir y estar activo en el sistema.
+- [ ] Se expone `GET /api/pagos/planes` para listar todos los planes (activos e inactivos).
+- [ ] Se expone `GET /api/pagos/planes/{idPlan}` para obtener el detalle de un plan por ID.
+- [ ] Se expone `POST /api/pagos/planes` para crear un nuevo plan.
+- [ ] Se expone `PUT /api/pagos/planes/{idPlan}` para actualizar un plan existente.
+- [ ] Se expone `DELETE /api/pagos/planes/{idPlan}` para eliminar (dar de baja) un plan.
+- [ ] No se puede eliminar un plan que tenga suscripciones activas asociadas.
+- [ ] El `monto` debe ser mayor a 0 y la `duracionDias` debe ser mayor a 0.
 
 ### 2. 📆 Estructura de la información
 
-- [ ] Se responde con la siguiente estructura en JSON al consultar planes:
+- [ ] Se responde con la siguiente estructura al listar planes:
 
 ```json
 {
@@ -37,72 +43,112 @@
       "idPlan": 1,
       "nombre": "Plan Básico",
       "monto": 55000,
-      "duracionDias": 30
+      "duracionDias": 30,
+      "activo": true
     },
     {
       "idPlan": 2,
       "nombre": "Plan Mensual Premium",
       "monto": 85000,
-      "duracionDias": 30
+      "duracionDias": 30,
+      "activo": true
     }
   ]
 }
 ```
 
-- [ ] Se responde con la siguiente estructura en JSON al suscribirse a un plan:
+- [ ] Se responde con la siguiente estructura al obtener un plan por ID:
 
 ```json
 {
   "success": true,
-  "message": "Suscripción activada correctamente",
+  "message": "Plan obtenido correctamente",
   "data": {
-    "idSuscripcion": 99,
-    "idCliente": 42,
-    "plan": "Plan Mensual Premium",
-    "monto": 85000,
-    "vigencia": "2026-04-18"
+    "idPlan": 1,
+    "nombre": "Plan Básico",
+    "monto": 55000,
+    "duracionDias": 30,
+    "activo": true
   }
 }
 ```
 
-- [ ] Si el plan seleccionado no existe o fue dado de baja, el backend retorna:
+- [ ] Se responde con la siguiente estructura al crear un plan:
+
+```json
+{
+  "success": true,
+  "message": "Plan creado correctamente",
+  "data": {
+    "idPlan": 3,
+    "nombre": "Plan Trimestral",
+    "monto": 200000,
+    "duracionDias": 90,
+    "activo": true
+  }
+}
+```
+
+- [ ] Se responde con la siguiente estructura al actualizar un plan:
+
+```json
+{
+  "success": true,
+  "message": "Plan actualizado correctamente",
+  "data": {
+    "idPlan": 1,
+    "nombre": "Plan Básico Actualizado",
+    "monto": 60000,
+    "duracionDias": 30,
+    "activo": true
+  }
+}
+```
+
+- [ ] Se responde con la siguiente estructura al eliminar un plan:
+
+```json
+{
+  "success": true,
+  "message": "Plan eliminado correctamente",
+  "data": {
+    "idPlan": 1,
+    "activo": false
+  }
+}
+```
+
+- [ ] Si el plan no existe, el backend retorna:
 
 ```json
 {
   "success": false,
   "statusCode": 404,
-  "message": "Plan no disponible",
+  "message": "Plan no encontrado",
   "error": {
     "error_code": "PAY_PLAN_NOT_FOUND",
-    "details": "El plan seleccionado no existe o fue dado de baja",
+    "details": "No existe un plan con el ID proporcionado",
     "timestamp": "2026-03-18T10:30:00"
   }
 }
 ```
 
-## 🔧 Notas Técnicas
-
-- **Método HTTP:** `GET` para consultar planes / `POST` para suscribirse
-- **Ruta consulta:** `/api/pagos/planes`
-- **Ruta suscripción:** `/api/pagos/planes/suscribir`
-
-## 📤 Ejemplo de Respuesta JSON
+- [ ] Si se intenta eliminar un plan con suscripciones activas, el backend retorna:
 
 ```json
 {
-  "success": true,
-  "message": "Suscripción activada correctamente",
-  "data": {
-    "idSuscripcion": 99,
-    "idCliente": 42,
-    "plan": "Plan Mensual Premium",
-    "monto": 85000,
-    "vigencia": "2026-04-18"
+  "success": false,
+  "statusCode": 409,
+  "message": "Plan con suscripciones activas",
+  "error": {
+    "error_code": "PAY_PLAN_HAS_ACTIVE_SUBSCRIPTIONS",
+    "details": "No se puede eliminar un plan que tiene suscripciones activas asociadas",
+    "timestamp": "2026-03-18T10:30:00"
   }
 }
 ```
 
-- [ ] Si no hay planes activos en el sistema, el backend retorna:
+- [ ] Si no hay planes registrados, el backend retorna:
 
 ```json
 {
@@ -111,79 +157,114 @@
   "message": "Sin planes disponibles",
   "error": {
     "error_code": "PAY_NO_PLANS_FOUND",
-    "details": "No hay planes de suscripción activos en el sistema",
+    "details": "No hay planes de suscripción registrados en el sistema",
     "timestamp": "2026-03-18T10:30:00"
   }
 }
 ```
 
+## 🔧 Notas Técnicas
+
+- **Ruta base:** `/api/pagos/planes`
+- `GET    /api/pagos/planes`           → Listar todos los planes
+- `GET    /api/pagos/planes/{idPlan}`  → Obtener plan por ID
+- `POST   /api/pagos/planes`           → Crear plan
+- `PUT    /api/pagos/planes/{idPlan}`  → Actualizar plan
+- `DELETE /api/pagos/planes/{idPlan}`  → Eliminar plan (baja lógica)
+
 ## 🧪 Requisitos de prueba
 
 ### Casos de prueba funcional
 
-### ✅ Caso 1: Consulta exitosa de planes disponibles
+### ✅ Caso 1: Listar planes correctamente
 
-- **Precondición:** Existen planes activos registrados en el sistema.
-- **Acción:** `GET /api/pagos/planes` con token de cliente válido.
+- **Precondición:** Existen planes registrados en el sistema.
+- **Acción:** `GET /api/pagos/planes`
 - **Resultado esperado:**
   - HTTP 200 OK
-  - Campo `success: true`
-  - Lista de planes con nombre, monto y duración
-  - Al menos un plan retornado en la respuesta
+  - Lista de planes con idPlan, nombre, monto, duracionDias y activo
 
-### ✅ Caso 2: Suscripción exitosa a un plan
+### ✅ Caso 2: Obtener plan por ID
 
-- **Precondición:** El plan existe y está activo en el sistema.
-- **Acción:** `POST /api/pagos/planes/suscribir` con idCliente e idPlan válidos.
+- **Precondición:** El plan existe.
+- **Acción:** `GET /api/pagos/planes/1`
+- **Resultado esperado:**
+  - HTTP 200 OK
+  - Detalle completo del plan
+
+### ✅ Caso 3: Crear plan exitosamente
+
+- **Precondición:** El administrador está autenticado.
+- **Acción:** `POST /api/pagos/planes` con nombre, monto y duracionDias válidos.
 - **Resultado esperado:**
   - HTTP 201 Created
-  - Campo `success: true`
-  - `idSuscripcion` generado correctamente
-  - Campo `vigencia` con la fecha de vencimiento del plan
+  - Plan creado con `idPlan` generado y `activo: true`
 
-### ❌ Caso 3: Plan no disponible
+### ✅ Caso 4: Actualizar plan exitosamente
 
-- **Precondición:** El idPlan enviado no existe o fue dado de baja.
-- **Acción:** `POST /api/pagos/planes/suscribir` con idPlan inexistente.
+- **Precondición:** El plan existe.
+- **Acción:** `PUT /api/pagos/planes/1` con nuevos datos.
+- **Resultado esperado:**
+  - HTTP 200 OK
+  - Plan actualizado correctamente
+
+### ✅ Caso 5: Eliminar plan sin suscripciones activas
+
+- **Precondición:** El plan existe y no tiene suscripciones activas.
+- **Acción:** `DELETE /api/pagos/planes/1`
+- **Resultado esperado:**
+  - HTTP 200 OK
+  - Plan dado de baja con `activo: false`
+
+### ❌ Caso 6: Obtener plan inexistente
+
+- **Precondición:** El idPlan no existe en el sistema.
+- **Acción:** `GET /api/pagos/planes/999`
 - **Resultado esperado:**
   - HTTP 404 Not Found
-  - Campo `success: false`
   - `error_code`: `PAY_PLAN_NOT_FOUND`
-  - Mensaje: `"Plan no disponible"`
 
-### ❌ Caso 4: Sin planes activos en el sistema
+### ❌ Caso 7: Eliminar plan con suscripciones activas
 
-- **Precondición:** No hay planes de suscripción activos registrados.
-- **Acción:** `GET /api/pagos/planes` con token válido.
+- **Precondición:** El plan tiene suscripciones activas de clientes.
+- **Acción:** `DELETE /api/pagos/planes/1`
+- **Resultado esperado:**
+  - HTTP 409 Conflict
+  - `error_code`: `PAY_PLAN_HAS_ACTIVE_SUBSCRIPTIONS`
+
+### ❌ Caso 8: Sin planes registrados
+
+- **Precondición:** No hay planes en el sistema.
+- **Acción:** `GET /api/pagos/planes`
 - **Resultado esperado:**
   - HTTP 404 Not Found
-  - Campo `success: false`
   - `error_code`: `PAY_NO_PLANS_FOUND`
-  - Mensaje: `"Sin planes disponibles"`
 
 ## ✅ Definición de Hecho
 
 ### 📦 Alcance Funcional
 
-- [ ] Los planes se listan correctamente con nombre, monto y duración.
-- [ ] La suscripción se activa correctamente con fecha de vigencia calculada.
-- [ ] Solo existe un plan activo por cliente a la vez.
-- [ ] La respuesta JSON cumple con el contrato definido.
+- [ ] Los cuatro endpoints CRUD funcionan correctamente.
+- [ ] No se elimina un plan con suscripciones activas.
+- [ ] La baja de planes es lógica (campo `activo: false`), no física.
+- [ ] La respuesta JSON cumple con el contrato definido en todos los casos.
 
 ### 🧪 Pruebas Completadas
 
-- [ ] Se ejecutaron pruebas unitarias para cada funcionalidad principal.
+- [ ] Se ejecutaron pruebas unitarias para cada operación CRUD.
 - [ ] Se cubrieron los casos de error y respuestas sin datos.
 - [ ] Las pruebas funcionales están documentadas y pasadas.
 
 ### 📄 Documentación Técnica
 
-- [ ] Endpoint documentado en Swagger / OpenAPI.
+- [ ] Endpoints documentados en Swagger / OpenAPI.
 - [ ] Se describen campos de entrada y salida con ejemplos.
 
 ### 🔐 Manejo de Errores
 
-- [ ] Se devuelve código HTTP 400 para parámetros inválidos.
+- [ ] Se devuelve código HTTP 400 para datos inválidos (monto ≤ 0, duración ≤ 0).
 - [ ] Se devuelve código HTTP 401/403 para acceso no autorizado.
+- [ ] Se devuelve código HTTP 404 cuando el plan no existe.
+- [ ] Se devuelve código HTTP 409 cuando se intenta eliminar un plan con suscripciones activas.
 - [ ] Se devuelve código HTTP 500/503 ante fallos internos.
-- [ ] El campo `mensaje` incluye texto descriptivo y amigable.
+- [ ] El campo `message` incluye texto descriptivo y amigable.

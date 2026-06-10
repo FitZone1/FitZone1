@@ -34,7 +34,7 @@ def _error(status_code: int, message: str, error_code: str, details: str) -> JSO
     )
 
 
-# ── POST /api/pagos/facturas ──────────────────────────────────
+# #── POST /api/pagos/facturas ──────────────────────────────────
 @router.post("/")
 def generar_factura(datos: FacturaCreate):
     """Genera una factura electrónica para un pago aprobado."""
