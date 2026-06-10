@@ -21,6 +21,7 @@
 - [ ] Se expone un endpoint `PUT /api/rutinas/{idRutina}/ejercicios` que recibe idRutina y lista de ejercicios actualizada.
 - [ ] Solo el entrenador que creó la rutina puede modificar sus ejercicios.
 - [ ] La rutina debe mantener al menos un ejercicio después de cualquier modificación.
+- [ ] Cada ejercicio debe incluir nombre, series y repeticiones con valores mayores a cero.
 - [ ] Los cambios aplican de inmediato para todos los clientes asignados a esa rutina.
 
 ### 2. 📆 Estructura de la información
@@ -54,10 +55,26 @@
 }
 ```
 
+- [ ] Si la lista de ejercicios enviada está vacía, el backend retorna:
+
+```json
+{
+  "success": false,
+  "statusCode": 400,
+  "message": "Rutina sin ejercicios",
+  "error": {
+    "error_code": "RUT_EMPTY_EXERCISES",
+    "details": "La rutina debe tener al menos un ejercicio registrado",
+    "timestamp": "2026-03-18T10:30:00"
+  }
+}
+```
+
 ## 🔧 Notas Técnicas
 
 - **Método HTTP:** `PUT`
 - **Ruta:** `/api/rutinas/{idRutina}/ejercicios`
+- La lista de ejercicios reemplaza completamente la lista anterior de la rutina.
 
 ## 📤 Ejemplo de Respuesta JSON
 
@@ -73,29 +90,14 @@
 }
 ```
 
-- [ ] Si otro entrenador intenta modificar la rutina, el backend retorna:
-
-```json
-{
-  "success": false,
-  "statusCode": 403,
-  "message": "Sin permisos",
-  "error": {
-    "error_code": "RUT_UNAUTHORIZED_EDIT",
-    "details": "Solo el entrenador que creó la rutina puede modificar sus ejercicios",
-    "timestamp": "2026-03-18T10:30:00"
-  }
-}
-```
-
 ## 🧪 Requisitos de prueba
 
 ### Casos de prueba funcional
 
 ### ✅ Caso 1: Actualización exitosa de ejercicios
 
-- **Precondición:** El entrenador autenticado es el creador de la rutina y envía al menos un ejercicio.
-- **Acción:** `PUT /api/rutinas/24/ejercicios` con lista de ejercicios actualizada válida.
+- **Precondición:** El entrenador autenticado es el creador de la rutina y envía al menos un ejercicio válido.
+- **Acción:** `PUT /api/rutinas/24/ejercicios` con lista de ejercicios actualizada.
 - **Resultado esperado:**
   - HTTP 200 OK
   - Campo `success: true`
@@ -111,7 +113,16 @@
   - Campo `success: true`
   - `totalEjercicios` incrementado en uno respecto al total anterior
 
-### ❌ Caso 3: Otro entrenador intenta modificar la rutina
+### ✅ Caso 3: Reducir la rutina al mínimo de un ejercicio
+
+- **Precondición:** El entrenador autenticado es el creador de la rutina y la rutina tiene más de un ejercicio.
+- **Acción:** `PUT /api/rutinas/24/ejercicios` enviando una lista con exactamente 1 ejercicio válido.
+- **Resultado esperado:**
+  - HTTP 200 OK
+  - Campo `success: true`
+  - `totalEjercicios: 1`
+
+### ❌ Caso 4: Otro entrenador intenta modificar la rutina
 
 - **Precondición:** El entrenador autenticado NO es el creador de la rutina.
 - **Acción:** `PUT /api/rutinas/24/ejercicios` con token de otro entrenador.
@@ -121,7 +132,7 @@
   - `error_code`: `RUT_UNAUTHORIZED_EDIT`
   - Mensaje: `"Sin permisos"`
 
-### ❌ Caso 4: Rutina no encontrada
+### ❌ Caso 5: Rutina no encontrada
 
 - **Precondición:** El idRutina enviado no existe en la base de datos.
 - **Acción:** `PUT /api/rutinas/999/ejercicios` con id inexistente.
@@ -131,6 +142,42 @@
   - `error_code`: `RUT_NOT_FOUND`
   - Mensaje descriptivo indicando que la rutina no existe
 
+### ❌ Caso 6: Lista de ejercicios vacía
+
+- **Precondición:** El entrenador autenticado es el creador de la rutina.
+- **Acción:** `PUT /api/rutinas/24/ejercicios` con `ejercicios: []`.
+- **Resultado esperado:**
+  - HTTP 400 Bad Request
+  - Campo `success: false`
+  - `error_code`: `RUT_EMPTY_EXERCISES`
+  - Mensaje: `"Rutina sin ejercicios"`
+
+### ❌ Caso 7: Ejercicio con `series` o `repeticiones` igual a cero o negativo
+
+- **Precondición:** El entrenador autenticado es el creador de la rutina.
+- **Acción:** `PUT /api/rutinas/24/ejercicios` con un ejercicio donde `series: 0` o `repeticiones: -2`.
+- **Resultado esperado:**
+  - HTTP 422 Unprocessable Entity
+  - Mensaje de validación indicando que `series` y `repeticiones` deben ser mayores a `0`
+
+### ❌ Caso 8: Solicitud sin token de autenticación
+
+- **Precondición:** No se envía header de autenticación.
+- **Acción:** `PUT /api/rutinas/24/ejercicios` sin header `Authorization`.
+- **Resultado esperado:**
+  - HTTP 401 Unauthorized
+  - Campo `success: false`
+  - `error_code`: `AUTH_MISSING_TOKEN`
+  - Mensaje: `"Token de autenticación requerido"`
+
+### ❌ Caso 9: `idRutina` en la URL no es un entero válido
+
+- **Precondición:** El entrenador está autenticado.
+- **Acción:** `PUT /api/rutinas/abc/ejercicios` con un id no numérico en la URL.
+- **Resultado esperado:**
+  - HTTP 422 Unprocessable Entity
+  - Mensaje de validación indicando que `idRutina` debe ser un entero válido
+
 ## ✅ Definición de Hecho
 
 ### 📦 Alcance Funcional
@@ -138,6 +185,8 @@
 - [ ] Solo el entrenador creador puede modificar los ejercicios de la rutina.
 - [ ] Los cambios se aplican de inmediato para todos los clientes asignados.
 - [ ] La rutina siempre mantiene al menos un ejercicio tras la modificación.
+- [ ] Los clientes no pueden modificar rutinas y reciben HTTP 403.
+- [ ] Las solicitudes sin token reciben HTTP 401.
 - [ ] La respuesta JSON cumple con el contrato definido.
 
 ### 🧪 Pruebas Completadas
@@ -153,7 +202,10 @@
 
 ### 🔐 Manejo de Errores
 
-- [ ] Se devuelve código HTTP 400 para parámetros inválidos.
-- [ ] Se devuelve código HTTP 401/403 para acceso no autorizado.
+- [ ] Se devuelve código HTTP 400 para lista de ejercicios vacía.
+- [ ] Se devuelve código HTTP 401 para solicitudes sin token.
+- [ ] Se devuelve código HTTP 403 para acceso no autorizado.
+- [ ] Se devuelve código HTTP 404 para rutina no encontrada.
+- [ ] Se devuelve código HTTP 422 para datos de entrada con formato inválido.
 - [ ] Se devuelve código HTTP 500/503 ante fallos internos.
 - [ ] El campo `mensaje` incluye texto descriptivo y amigable.

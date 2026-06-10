@@ -1,7 +1,11 @@
-from app.domain.Pagos.ProcesarFactura_domain import (
-    FacturaCreate, FacturaResponse,
-)
-from app.repository.Pagos.ProcesarFactura_repository import ProcesarFacturaRepository
+# ─────────────────────────────────────────────────────────────
+# CAPA SERVICE — lógica de negocio
+# ─────────────────────────────────────────────────────────────
+
+from datetime import datetime
+
+from app.domain.Pagos.ProcesarFactura_domain          import FacturaCreate, FacturaResponse, FacturaData
+from app.repository.Pagos.ProcesarFactura_repository  import ProcesarFacturaRepository
 
 
 class ProcesarFacturaService:
@@ -10,25 +14,50 @@ class ProcesarFacturaService:
         self.repo = repo
 
     def generar_factura(self, datos: FacturaCreate) -> FacturaResponse:
-        # Validar que el pago exista y pertenezca al cliente
-        pago = self.repo.obtener_pago(datos.idPago, datos.idCliente)
-        if not pago:
+        """
+        Genera o retorna la factura de un pago aprobado.
+
+        Lanza ValueError:
+          - "PAY_PAYMENT_NOT_FOUND" → pago no existe, no APROBADO, o idCliente incorrecto
+        """
+        pago = self.repo.obtener_pago(datos.idPago)
+
+        # Regla: mismo 404 para todos los casos — no revelar info de otros clientes
+        if (
+            not pago
+            or pago["estado"] != "APROBADO"
+            or pago["idCliente"] != datos.idCliente
+        ):
             raise ValueError("PAY_PAYMENT_NOT_FOUND")
 
-        # REGLA DE NEGOCIO: solo pagos APROBADOS generan factura
-        if not pago.esta_aprobado():
-            raise ValueError("PAY_PAYMENT_NOT_APPROVED")
+        # Regla: si ya existe factura para este pago, retornarla sin duplicar
+        factura_existente = self.repo.obtener_factura_por_pago(datos.idPago)
+        if factura_existente:
+            return self._to_response(factura_existente)
 
-        # REGLA DE NEGOCIO: no generar factura duplicada para el mismo pago
-        existente = self.repo.factura_ya_existe(datos.idPago)
-        if existente:
-            raise ValueError("FAC_ALREADY_EXISTS")
-
-        factura = self.repo.crear_factura(pago)
-        return FacturaResponse(**factura.to_response())
+        # Crear nueva factura
+        fecha   = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        factura = self.repo.guardar_factura(pago, fecha)
+        return self._to_response(factura)
 
     def obtener_factura(self, id_factura: str) -> FacturaResponse:
-        factura = self.repo.obtener_factura(id_factura)
+        """
+        Consulta una factura por su ID.
+
+        Lanza ValueError:
+          - "PAY_INVOICE_NOT_FOUND" → factura no existe
+        """
+        factura = self.repo.obtener_factura_por_id(id_factura)
         if not factura:
             raise ValueError("PAY_INVOICE_NOT_FOUND")
-        return FacturaResponse(**factura.to_response())
+
+        return self._to_response(factura, message="Factura obtenida correctamente")
+
+    # ── Privado ───────────────────────────────────────────────
+
+    @staticmethod
+    def _to_response(factura: dict, message: str = "Factura generada correctamente") -> FacturaResponse:
+        return FacturaResponse(
+            message = message,
+            data    = FacturaData(**factura),
+        )

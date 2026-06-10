@@ -84,27 +84,35 @@ def actualizar_plan(id_plan: int, datos: PlanUpdate):
             }
         )
     except ValueError:
-        return _error(404, "Plan no disponible", "PAY_PLAN_NOT_FOUND",
-                      "El plan seleccionado no existe o fue dado de baja")
+        return _error(404, "Plan no encontrado", "PAY_PLAN_NOT_FOUND",
+                      "No existe un plan con el ID proporcionado")
 
 
 # ── DELETE /api/pagos/planes/{id_plan} ────────────────────────
 @router.delete("/{id_plan}")
 def dar_de_baja_plan(id_plan: int):
-    """Da de baja lógica un plan (no lo elimina)."""
+    """Da de baja lógica un plan (no lo elimina físicamente)."""
     try:
         resultado = service.dar_de_baja_plan(id_plan)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
                 "success": True,
-                "message": "Plan dado de baja correctamente",
+                "message": "Plan eliminado correctamente",
                 "data":    resultado.model_dump(),
             }
         )
-    except ValueError:
-        return _error(404, "Plan no disponible", "PAY_PLAN_NOT_FOUND",
-                      "El plan seleccionado no existe o fue dado de baja")
+    except ValueError as e:
+        error_code = str(e)
+        if error_code == "PAY_PLAN_HAS_ACTIVE_SUBSCRIPTIONS":
+            return _error(
+                409,
+                "Plan con suscripciones activas",
+                "PAY_PLAN_HAS_ACTIVE_SUBSCRIPTIONS",
+                "No se puede eliminar un plan que tiene suscripciones activas asociadas",
+            )
+        return _error(404, "Plan no encontrado", "PAY_PLAN_NOT_FOUND",
+                      "No existe un plan con el ID proporcionado")
 
 
 # ── POST /api/pagos/planes/suscribir ─────────────────────────

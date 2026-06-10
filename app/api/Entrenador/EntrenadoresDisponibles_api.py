@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Path, status
+from fastapi import APIRouter, Path, Query, status
 from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 from app.domain.Entrenador.EntrenadoresDisponibles_domain import EntrenadorDisponibleResponse
@@ -97,7 +97,7 @@ def listar_por_especialidad(
 )
 def cambiar_disponibilidad(
     id: int = Path(..., description="ID del entrenador (1, 2, 3 o 4)"),
-    disponible: bool = True,
+    disponible: bool = Query(..., description="Estado de disponibilidad (true o false)"),
 ):
     entrenador = entrenadores_disponibles_repository.actualizar_disponibilidad(id, disponible)
     if not entrenador:
