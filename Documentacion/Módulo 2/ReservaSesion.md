@@ -3,8 +3,8 @@
 ### 📖 Historia de usuario
 
 **Como** Cliente del gimnasio
-**Quiero** Reservar una sesión de entrenamiento con un entrenador disponible, consultar mis reservas activas y conocer la disponibilidad real del entrenador
-**Para** Asegurar mi espacio con el entrenador elegido, planificar mi rutina semanal y evitar intentar reservar en horarios ya llenos
+**Quiero** Reservar una sesión de entrenamiento con un entrenador disponible, consultar la capacidad del entrenador y ver el detalle de mis reservas por su ID
+**Para** Asegurar mi espacio con el entrenador elegido y planificar mi rutina semanal
 
 ## 🔁 Flujo esperado
 
@@ -13,15 +13,14 @@
 - El sistema consume el endpoint `POST /api/reservas` con idCliente, idEntrenador, fecha e idZona.
 - El backend valida que el horario esté disponible y no haya conflictos.
 - Se crea la reserva con estado CONFIRMADA y se retorna el idReserva generado.
-- El cliente puede listar sus reservas por idCliente o consultar una reserva específica por ID.
+- El cliente puede consultar el detalle de una reserva específica usando su idReserva.
 
 ## Criterios de aceptación
 
 ### 1. 🔍 Estructura y lógica del servicio
 
 - [ ] Se expone `POST /api/reservas` que recibe idCliente, idEntrenador, fecha e idZona.
-- [ ] Se expone `GET /api/reservas?idCliente={id}` para listar todas las reservas de un cliente.
-- [ ] Se expone `GET /api/reservas/{idReserva}` para obtener el detalle de una reserva por ID.
+- [ ] Se expone `GET /api/reservas/{idReserva}` para que el cliente consulte el detalle de una reserva por su ID.
 - [ ] Se expone `GET /api/reservas/capacidad?idEntrenador={id}&fecha={fecha}` para consultar la ocupación del entrenador en una fecha dada, incluyendo la capacidad máxima configurada en el sistema.
 - [ ] Un cliente no puede tener dos reservas activas en el mismo horario exacto.
 - [ ] El entrenador no puede tener dos sesiones en el mismo horario exacto.
@@ -42,24 +41,6 @@
     "idEntrenador": 10,
     "idCliente": 42
   }
-}
-```
-
-- [ ] Se responde con la siguiente estructura al listar reservas del cliente:
-
-```json
-{
-  "success": true,
-  "message": "Reservas obtenidas correctamente",
-  "data": [
-    {
-      "idReserva": 87,
-      "estado": "CONFIRMADA",
-      "fecha": "2026-03-20T15:00:00",
-      "idEntrenador": 10,
-      "idCliente": 42
-    }
-  ]
 }
 ```
 
@@ -125,21 +106,6 @@
 }
 ```
 
-- [ ] Si no se encuentran reservas para el cliente, el backend retorna:
-
-```json
-{
-  "success": false,
-  "statusCode": 404,
-  "message": "Sin reservas",
-  "error": {
-    "error_code": "RES_NOT_FOUND",
-    "details": "No se encontraron reservas para el cliente especificado",
-    "timestamp": "2026-03-18T10:30:00"
-  }
-}
-```
-
 - [ ] Si la reserva buscada por ID no existe, el backend retorna:
 
 ```json
@@ -158,7 +124,6 @@
 ## 🔧 Notas Técnicas
 
 - `POST   /api/reservas`                                           → Crear reserva
-- `GET    /api/reservas?idCliente={id}`                            → Listar reservas por cliente
 - `GET    /api/reservas/{idReserva}`                               → Obtener reserva por ID
 - `GET    /api/reservas/capacidad?idEntrenador={id}&fecha={fecha}` → Consultar capacidad del entrenador
 
@@ -219,13 +184,12 @@
 - [ ] La reserva solo se crea si el horario está disponible y no se superó la capacidad máxima.
 - [ ] No se permiten reservas solapadas para el mismo cliente o entrenador en el mismo horario exacto.
 - [ ] El estado de la reserva se crea correctamente como CONFIRMADA.
-- [ ] El listado de reservas filtra correctamente por idCliente.
-- [ ] La consulta de capacidad expone la capacidadMaxima, reservasActuales y lugaresDisponibles en tiempo real.
+- [ ] La consulta de capacidad expone capacidadMaxima, reservasActuales y lugaresDisponibles en tiempo real.
 - [ ] La respuesta JSON cumple con el contrato definido en todos los endpoints.
 
 ### 🧪 Pruebas Completadas
 
-- [ ] Se ejecutaron los 10 casos de prueba definidos (5 exitosos, 5 de error).
+- [ ] Se ejecutaron los 8 casos de prueba definidos (4 exitosos, 4 de error).
 - [ ] Se cubrieron todos los endpoints expuestos.
 - [ ] Las pruebas funcionales están documentadas y pasadas.
 
@@ -236,7 +200,6 @@
 
 ### 🔐 Manejo de Errores
 
-- [ ] Se devuelve código HTTP 400 para parámetros inválidos.
-- [ ] Se devuelve código HTTP 404 cuando no existe la reserva o no hay reservas para el cliente.
+- [ ] Se devuelve código HTTP 404 cuando no existe la reserva buscada por ID.
 - [ ] Se devuelve código HTTP 409 para conflictos de horario o capacidad máxima.
 - [ ] El campo `message` incluye texto descriptivo y amigable en todos los errores.
