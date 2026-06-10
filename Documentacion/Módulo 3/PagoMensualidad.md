@@ -155,17 +155,7 @@
   - `error_code`: `PAY_CARD_NUMBER_REQUIRED`
   - Mensaje: `"Número de tarjeta requerido"`
 
-### ❌ Caso 5: Pago rechazado por la pasarela
-
-- **Precondición:** La pasarela devuelve estado rechazado por fondos insuficientes.
-- **Acción:** `POST /api/pagos` con datos válidos pero sin fondos suficientes.
-- **Resultado esperado:**
-  - HTTP 402 Payment Required
-  - Campo `success: false`
-  - `error_code`: `PAY_PAYMENT_DECLINED`
-  - Suscripción no se renueva
-
-### ❌ Caso 6: Plan no encontrado
+### ❌ Caso 5: Plan no encontrado
 
 - **Precondición:** El idPlan enviado no existe en el sistema.
 - **Acción:** `POST /api/pagos` con idPlan inexistente.
