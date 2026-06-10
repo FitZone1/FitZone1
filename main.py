@@ -15,7 +15,7 @@ from app.api.Cliente.PagoMensualidad_api import router as pagos_mesualidad_route
 from app.api.ControlPermisos.ControlPermisos_api import router as control_permisos_router  
 from app.api.Cliente.procesarplanes_api import router as procesar_planes_router
 from app.api.Pagos.ProcesarFactura_api import router as procesar_facturas_router
-
+from app.api.Entrenador.CargarRutina_api import router as cargar_rutina_router
 
 # Crear la aplicación con metadata para la documentación
 app = FastAPI(
@@ -36,7 +36,7 @@ app.include_router(control_permisos_router)
 app.include_router(pagos_mesualidad_router)
 app.include_router(procesar_planes_router)
 app.include_router(procesar_facturas_router)
-
+app.include_router(cargar_rutina_router)
 
 # Ruta raíz — bienvenida
 @app.get("/", tags=["Root"])
