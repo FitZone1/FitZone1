@@ -184,15 +184,7 @@
   - HTTP 200 OK
   - Lista de planes con idPlan, nombre, monto, duracionDias y activo
 
-### ✅ Caso 2: Obtener plan por ID
-
-- **Precondición:** El plan existe.
-- **Acción:** `GET /api/pagos/planes/1`
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - Detalle completo del plan
-
-### ✅ Caso 3: Crear plan exitosamente
+### ✅ Caso 2: Crear plan exitosamente
 
 - **Precondición:** El administrador está autenticado.
 - **Acción:** `POST /api/pagos/planes` con nombre, monto y duracionDias válidos.
@@ -200,7 +192,7 @@
   - HTTP 201 Created
   - Plan creado con `idPlan` generado y `activo: true`
 
-### ✅ Caso 4: Actualizar plan exitosamente
+### ✅ Caso 3: Actualizar plan exitosamente
 
 - **Precondición:** El plan existe.
 - **Acción:** `PUT /api/pagos/planes/1` con nuevos datos.
@@ -208,7 +200,7 @@
   - HTTP 200 OK
   - Plan actualizado correctamente
 
-### ✅ Caso 5: Eliminar plan sin suscripciones activas
+### ✅ Caso 4: Eliminar plan sin suscripciones activas
 
 - **Precondición:** El plan existe y no tiene suscripciones activas.
 - **Acción:** `DELETE /api/pagos/planes/1`
@@ -216,15 +208,7 @@
   - HTTP 200 OK
   - Plan dado de baja con `activo: false`
 
-### ❌ Caso 6: Obtener plan inexistente
-
-- **Precondición:** El idPlan no existe en el sistema.
-- **Acción:** `GET /api/pagos/planes/999`
-- **Resultado esperado:**
-  - HTTP 404 Not Found
-  - `error_code`: `PAY_PLAN_NOT_FOUND`
-
-### ❌ Caso 7: Eliminar plan con suscripciones activas
+### ❌ Caso 5: Eliminar plan con suscripciones activas
 
 - **Precondición:** El plan tiene suscripciones activas de clientes.
 - **Acción:** `DELETE /api/pagos/planes/1`
@@ -232,7 +216,7 @@
   - HTTP 409 Conflict
   - `error_code`: `PAY_PLAN_HAS_ACTIVE_SUBSCRIPTIONS`
 
-### ❌ Caso 8: Sin planes registrados
+### ❌ Caso 6: Sin planes registrados
 
 - **Precondición:** No hay planes en el sistema.
 - **Acción:** `GET /api/pagos/planes`
