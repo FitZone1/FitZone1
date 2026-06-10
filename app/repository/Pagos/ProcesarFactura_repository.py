@@ -1,57 +1,90 @@
-from app.domain.Pagos.ProcesarFactura_domain import Factura
-from datetime import datetime, timezone
+# ─────────────────────────────────────────────────────────────
+# CAPA REPOSITORY — acceso a datos
+# Sin lógica de negocio.
+# ─────────────────────────────────────────────────────────────
+
 from typing import Optional
 
 
+# ── Simulación de pagos existentes en BD ─────────────────────
+
+_pagos_db: dict = {
+    "PAY-987654": {
+        "idPago":        "PAY-987654",
+        "idCliente":     42,
+        "estado":        "APROBADO",
+        "monto":         85000,
+        "plan":          "Plan Mensual Premium",
+        "nombreCliente": "Angela Torres",
+    },
+    "PAY-222222": {
+        "idPago":        "PAY-222222",
+        "idCliente":     42,
+        "estado":        "RECHAZADO",
+        "monto":         50000,
+        "plan":          "Plan Básico",
+        "nombreCliente": "Angela Torres",
+    },
+    "PAY-333333": {
+        "idPago":        "PAY-333333",
+        "idCliente":     15,
+        "estado":        "PENDIENTE",
+        "monto":         60000,
+        "plan":          "Plan Semestral",
+        "nombreCliente": "Carlos Ruiz",
+    },
+}
+
+# ── Facturas en memoria ───────────────────────────────────────
+
+_facturas_db:    dict = {}  # { idFactura: dict }
+_factura_x_pago: dict = {}  # { idPago: idFactura } — evita duplicados
+_sequence_id:    int  = 0
+
+
+def _next_id() -> str:
+    global _sequence_id
+    _sequence_id += 1
+    return f"FAC-{_sequence_id:06d}"
+
+
+# ── Repositorio unificado ─────────────────────────────────────
+
 class ProcesarFacturaRepository:
 
-    def __init__(self):
-        self._facturas: list[Factura] = []
-        self._siguiente_factura_num: int = 1
+    # ── Pagos ─────────────────────────────────────────────────
 
-    # ── Pagos — delega al repositorio real de pagos ───────────
-    def obtener_pago(self, id_pago: str, id_cliente: int):
-        """
-        Busca el pago en el repositorio de PagoMensualidad (fuente de verdad).
-        Retorna el pago solo si pertenece al cliente indicado.
-        """
-        from app.repository.Cliente.PagoMensualidad_repository import pago_mensualidad_repository
-        pago = pago_mensualidad_repository.obtener_por_id(id_pago)
-        if pago and pago.id_cliente == id_cliente:
-            return pago
-        return None
+    def obtener_pago(self, id_pago: str) -> Optional[dict]:
+        return _pagos_db.get(id_pago)
 
     # ── Facturas ──────────────────────────────────────────────
 
-    def obtener_factura(self, id_factura: str) -> Optional[Factura]:
-        return next(
-            (f for f in self._facturas if f.id_factura == id_factura),
-            None
-        )
+    def obtener_factura_por_pago(self, id_pago: str) -> Optional[dict]:
+        """Retorna la factura ya generada para ese pago, o None."""
+        id_factura = _factura_x_pago.get(id_pago)
+        if not id_factura:
+            return None
+        return _facturas_db.get(id_factura)
 
-    def factura_ya_existe(self, id_pago: str) -> Optional[Factura]:
-        """Evita generar una factura duplicada para el mismo pago."""
-        return next(
-            (f for f in self._facturas if f.id_pago == id_pago),
-            None
-        )
+    def obtener_factura_por_id(self, id_factura: str) -> Optional[dict]:
+        return _facturas_db.get(id_factura)
 
-    def crear_factura(self, pago) -> Factura:
-        id_factura = f"FAC-{self._siguiente_factura_num:06d}"
-        fecha      = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
-        nueva = Factura(
-            id_factura     = id_factura,
-            id_pago        = pago.id_pago,
-            monto          = pago.monto,
-            fecha          = fecha,
-            url_descarga   = f"/facturas/{id_factura}.pdf",
-            plan           = str(pago.id_plan),  # PagoMensualidad guarda id_plan (int)
-            nombre_cliente = f"Cliente {pago.id_cliente}",
-        )
-        self._facturas.append(nueva)
-        self._siguiente_factura_num += 1
-        return nueva
+    def guardar_factura(self, pago: dict, fecha: str) -> dict:
+        """Crea y persiste una nueva factura a partir del pago."""
+        id_factura = _next_id()
+        factura = {
+            "idFactura":     id_factura,
+            "idPago":        pago["idPago"],
+            "monto":         pago["monto"],
+            "fecha":         fecha,
+            "plan":          pago["plan"],
+            "nombreCliente": pago["nombreCliente"],
+            "urlDescarga":   f"/facturas/{id_factura}.pdf",
+        }
+        _facturas_db[id_factura]        = factura
+        _factura_x_pago[pago["idPago"]] = id_factura
+        return factura
 
 
-# Instancia única compartida (Singleton simple)
+# Singleton — nombre que espera el __init__.py
 procesar_factura_repository = ProcesarFacturaRepository()

@@ -1,115 +1,133 @@
-from fastapi import APIRouter, Request, status
+# ─────────────────────────────────────────────────────────────
+# CAPA API — router de FastAPI
+# ─────────────────────────────────────────────────────────────
+
+from datetime import datetime
+from typing import Annotated
+from fastapi import APIRouter, Header, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi.exceptions import RequestValidationError
-from datetime import datetime, timezone
-from app.domain.Pagos.ProcesarFactura_domain import FacturaCreate
-from app.repository.Pagos.ProcesarFactura_repository import procesar_factura_repository
-from app.services.Pagos.ProcesarFactura_service import ProcesarFacturaService
 
-router = APIRouter(
-    prefix="/api/pagos/facturas",
-    tags=["Procesar Factura"],
-)
+from app.domain.Pagos.ProcesarFactura_domain         import FacturaCreate, FacturaResponse, ErrorResponse, ErrorDetail
+from app.repository.Pagos.ProcesarFactura_repository import pago_repository, factura_repository
+from app.repository.iniciosesion.iniciosesion_repositories import sesion_repository
+from app.services.Pagos.ProcesarFactura_service       import FacturaService
 
-service = ProcesarFacturaService(repo=procesar_factura_repository)
+router          = APIRouter(prefix="/pagos/facturas", tags=["Facturas"])
+factura_service = FacturaService(pago_repository, factura_repository)
 
 
 # ── Helpers ───────────────────────────────────────────────────
-def _ts() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
 
-def _error(status_code: int, message: str, error_code: str, details: str) -> JSONResponse:
-    return JSONResponse(
-        status_code=status_code,
-        content={
-            "success":    False,
-            "statusCode": status_code,
-            "message":    message,
-            "error": {
-                "error_code": error_code,
-                "details":    details,
-                "timestamp":  _ts(),
-            },
-        }
+def _timestamp() -> str:
+    return datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+
+def _error_response(status_code: int, message: str, error_code: str, details: str) -> JSONResponse:
+    body = ErrorResponse(
+        statusCode = status_code,
+        message    = message,
+        error      = ErrorDetail(
+            error_code = error_code,
+            details    = details,
+            timestamp  = _timestamp(),
+        ),
     )
+    return JSONResponse(status_code=status_code, content=body.model_dump())
 
 
-# ── POST /api/pagos/facturas/ ─────────────────────────────────
-@router.post("/", summary="Generar Factura",
-             description="Genera una factura electrónica para un pago aprobado.")
-def generar_factura(datos: FacturaCreate):
-    try:
-        factura = service.generar_factura(datos)
-        return JSONResponse(
-            status_code=status.HTTP_201_CREATED,
-            content={
-                "success": True,
-                "message": "Factura generada correctamente",
-                "data":    factura.model_dump(),
-            }
+_ERROR_MAP = {
+    "PAY_PAYMENT_NOT_FOUND": (404, "Pago no encontrado",    "No existe un pago aprobado con el ID proporcionado"),
+    "PAY_INVOICE_NOT_FOUND": (404, "Factura no encontrada", "No existe una factura con el ID proporcionado"),
+}
+
+
+# ── Dependencia: valida token y rol ──────────────────────────
+
+def _validar_cliente(token: str, rol: str) -> int:
+    """Verifica que el token sea válido y que el rol sea CLIENTE."""
+    if rol != "CLIENTE":
+        return _error_response(
+            403, "Acceso denegado", "AUTH_UNAUTHORIZED",
+            "Solo los clientes pueden acceder a sus facturas",
         )
+
+    sesion = sesion_repository.obtener_por_token(token)
+    if not sesion:
+        raise HTTPException(status_code=401, detail="Token inválido o sesión expirada")
+
+    return sesion.id_usuario
+
+
+# ── Endpoints ─────────────────────────────────────────────────
+
+@router.post(
+    "",
+    response_model=FacturaResponse,
+    status_code=201,
+    responses={
+        404: {"model": ErrorResponse, "description": "Pago no encontrado o no aprobado"},
+        401: {"description": "Token inválido o sesión expirada"},
+        403: {"model": ErrorResponse, "description": "Acceso denegado — solo CLIENTE"},
+    },
+)
+def generar_factura(
+    datos:         FacturaCreate,
+    token:         Annotated[str, Header(description="Token obtenido al iniciar sesión")],
+    x_rol_usuario: Annotated[str, Header(description="Rol del usuario. Debe ser: CLIENTE")],
+):
+    """
+    Genera la factura electrónica de un pago aprobado.
+
+    - Si ya existe factura para ese pago, la retorna sin crear duplicado.
+    - El pago debe estar en estado **APROBADO** y pertenecer al `idCliente` enviado.
+
+    **Headers requeridos:**
+    - `token`: token obtenido al iniciar sesión
+    - `x-rol-usuario`: debe ser `CLIENTE`
+    """
+    resultado = _validar_cliente(token, x_rol_usuario)
+    if isinstance(resultado, JSONResponse):
+        return resultado
+
+    try:
+        return factura_service.generar_factura(datos)
     except ValueError as e:
-        msg = str(e)
-        if msg == "PAY_PAYMENT_NOT_FOUND":
-            return _error(404, "Pago no encontrado",
-                          "PAY_PAYMENT_NOT_FOUND",
-                          "No existe un pago con el ID proporcionado para este cliente")
-        if msg == "PAY_PAYMENT_NOT_APPROVED":
-            return _error(400, "Pago no aprobado",
-                          "PAY_PAYMENT_NOT_APPROVED",
-                          "El pago existe pero su estado no es APROBADO")
-        if msg == "FAC_ALREADY_EXISTS":
-            return _error(409, "Factura duplicada",
-                          "FAC_ALREADY_EXISTS",
-                          "Ya existe una factura generada para este pago")
-        return _error(500, "Error interno", "PAY_INTERNAL_ERROR",
-                      "Ocurrió un error inesperado al generar la factura")
-    except Exception:
-        return _error(500, "Error interno del servidor", "PAY_INTERNAL_ERROR",
-                      "Ocurrió un error inesperado. Intente más tarde.")
+        codigo = str(e)
+        status, message, details = _ERROR_MAP.get(codigo, (400, "Error de validación", codigo))
+        return _error_response(status, message, codigo, details)
 
 
-# ── Manejador de errores de validación (400) ──────────────────
-# IMPORTANTE: registrar en main.py con:
-#   app.add_exception_handler(RequestValidationError, validation_exception_handler)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    errores = [
-        {"campo": ".".join(str(x) for x in e["loc"]), "mensaje": e["msg"]}
-        for e in exc.errors()
-    ]
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={
-            "success":    False,
-            "statusCode": 400,
-            "message":    "Parámetros inválidos",
-            "error": {
-                "error_code": "PAY_INVALID_PARAMS",
-                "details":    errores,
-                "timestamp":  _ts(),
-            },
-        }
-    )
+@router.get(
+    "/{id_factura}",
+    response_model=FacturaResponse,
+    status_code=200,
+    responses={
+        404: {"model": ErrorResponse, "description": "Factura no encontrada"},
+        401: {"description": "Token inválido o sesión expirada"},
+        403: {"model": ErrorResponse, "description": "Acceso denegado — solo CLIENTE"},
+    },
+)
+def consultar_factura(
+    id_factura:    str,
+    token:         Annotated[str, Header(description="Token obtenido al iniciar sesión")],
+    x_rol_usuario: Annotated[str, Header(description="Rol del usuario. Debe ser: CLIENTE")],
+):
+    """
+    Consulta los datos de una factura por su ID.
 
+    Retorna toda la información de la factura: monto, plan, fecha, cliente y URL de referencia.
 
-# ── GET /api/pagos/facturas/{id_factura} ──────────────────────
-@router.get("/{id_factura}", summary="Obtener Factura",
-            description="Consulta una factura existente por su ID.")
-def obtener_factura(id_factura: str):
+    **Headers requeridos:**
+    - `token`: token obtenido al iniciar sesión
+    - `x-rol-usuario`: debe ser `CLIENTE`
+    """
+    resultado = _validar_cliente(token, x_rol_usuario)
+    if isinstance(resultado, JSONResponse):
+        return resultado
+
     try:
-        factura = service.obtener_factura(id_factura)
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "success": True,
-                "message": "Factura obtenida correctamente",
-                "data":    factura.model_dump(),
-            }
-        )
-    except ValueError:
-        return _error(404, "Factura no encontrada",
-                      "PAY_INVOICE_NOT_FOUND",
-                      "No existe una factura con el ID proporcionado")
-    except Exception:
-        return _error(500, "Error interno del servidor", "PAY_INTERNAL_ERROR",
-                      "Ocurrió un error inesperado. Intente más tarde.")
+        return factura_service.consultar_factura(id_factura)
+    except ValueError as e:
+        codigo = str(e)
+        status, message, details = _ERROR_MAP.get(codigo, (404, "No encontrado", codigo))
+        return _error_response(status, message, codigo, details)
