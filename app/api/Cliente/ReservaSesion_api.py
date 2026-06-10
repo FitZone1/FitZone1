@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 from app.domain.Cliente.ReservaSesion_domain import ReservaSesionCreate
 from app.repository.Cliente.ReservaSesion_repository import reserva_sesion_repository
-from app.services.Cliente.ReservaSesion_services import ReservaSesionService, MAX_CLIENTES_POR_DIA
+from app.services.Cliente.ReservaSesion_services import ReservaSesionService
 
 router = APIRouter(
     prefix="/api/reservas",
@@ -33,7 +33,7 @@ def _error(status_code: int, message: str, error_code: str, details: str):
     )
 
 
-# ── CASO 1: Crear reserva ─────────────────────────────────────
+# ── Crear reserva ─────────────────────────────────────────────
 @router.post(
     "",
     summary="Crear una nueva reserva de sesión",
@@ -66,42 +66,38 @@ def crear_reserva(datos: ReservaSesionCreate):
         return _error(400, "Solicitud inválida", "RES_BAD_REQUEST", codigo)
 
 
-# ── CASO 3 y 4: Consultar capacidad del entrenador ────────────
+# ── Consultar disponibilidad del entrenador ───────────────────
 @router.get(
-    "/capacidad",
-    summary="Consultar capacidad del entrenador en una fecha",
+    "/disponibilidad",
+    summary="Consultar disponibilidad del entrenador",
     description=(
-        "Retorna cuántas reservas tiene el entrenador en la fecha indicada "
-        "y cuántos lugares quedan disponibles. "
-        "Formato de fecha: `YYYY-MM-DD`."
+        "Indica si el entrenador tiene disponibilidad en la fecha y hora indicadas. "
+        "Formato: `YYYY-MM-DDTHH:MM:SS`."
     ),
     responses={
-        200: {"description": "Capacidad consultada correctamente"},
+        200: {"description": "Consulta realizada correctamente"},
     },
 )
-def consultar_capacidad(
+def consultar_disponibilidad(
     idEntrenador: int = Query(..., gt=0, description="ID del entrenador"),
-    fecha: str = Query(..., description="Fecha a consultar (YYYY-MM-DD)"),
+    fecha: str = Query(..., description="Fecha y hora a consultar (YYYY-MM-DDTHH:MM:SS)"),
 ):
-    reservas_actuales = reserva_sesion_repository.contar_reservas_dia(idEntrenador, fecha + "T00:00:00")
-    lugares_disponibles = max(0, MAX_CLIENTES_POR_DIA - reservas_actuales)
+    ocupado = reserva_sesion_repository.existe_conflicto(idEntrenador, fecha)
     return JSONResponse(
         status_code=status.HTTP_200_OK,
         content={
             "success": True,
-            "message": "Capacidad consultada correctamente",
+            "message": "Consulta realizada correctamente",
             "data": {
-                "idEntrenador":       idEntrenador,
-                "fecha":              fecha,
-                "capacidadMaxima":    MAX_CLIENTES_POR_DIA,
-                "reservasActuales":   reservas_actuales,
-                "lugaresDisponibles": lugares_disponibles,
+                "idEntrenador": idEntrenador,
+                "fecha":        fecha,
+                "disponible":   not ocupado,
             }
         }
     )
 
 
-# ── CASO 2 y 8: Obtener reserva por ID ───────────────────────
+# ── Obtener reserva por ID ────────────────────────────────────
 @router.get(
     "/{idReserva}",
     summary="Obtener detalle de una reserva por ID",
