@@ -10,15 +10,15 @@ class ReservaSesionService:
         self.repo = repo
 
     def crear_reserva(self, datos: ReservaSesionCreate) -> ReservaSesionResponse:
-        # Regla de negocio: no puede haber conflicto de horario para el entrenador
+        # Regla: no puede haber conflicto de horario para el entrenador
         if self.repo.existe_conflicto(datos.idEntrenador, datos.fecha):
             raise ValueError("RES_SCHEDULE_CONFLICT")
 
-        # Regla de negocio: el cliente no puede tener dos reservas en el mismo horario
+        # Regla: el cliente no puede tener dos reservas en el mismo horario
         if self.repo.cliente_tiene_conflicto(datos.idCliente, datos.fecha):
             raise ValueError("RES_SCHEDULE_CONFLICT")
 
-        # Regla de negocio: el entrenador no puede superar el máximo de clientes por día
+        # Regla: el entrenador no puede superar el máximo de clientes por día
         if self.repo.contar_reservas_dia(datos.idEntrenador, datos.fecha) >= MAX_CLIENTES_POR_DIA:
             raise ValueError("RES_MAX_CAPACITY_REACHED")
 
@@ -30,12 +30,13 @@ class ReservaSesionService:
         )
         return ReservaSesionResponse(**r.to_response())
 
-    def listar(self) -> list[ReservaSesionResponse]:
+    def listar_por_cliente(self, id_cliente: int) -> list[ReservaSesionResponse]:
+        """Retorna las reservas de un cliente específico."""
         return [ReservaSesionResponse(**r.to_response())
-                for r in self.repo.obtener_todos()]
+                for r in self.repo.obtener_por_cliente(id_cliente)]
 
     def obtener(self, id: int) -> ReservaSesionResponse:
         r = self.repo.obtener_por_id(id)
         if not r:
-            raise ValueError(f"Reserva con id {id} no encontrada")
+            raise ValueError("RES_ID_NOT_FOUND")
         return ReservaSesionResponse(**r.to_response())
