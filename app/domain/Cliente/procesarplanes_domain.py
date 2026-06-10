@@ -30,6 +30,7 @@ class PlanResponse(BaseModel):
     nombre:       str
     monto:        float
     duracionDias: int
+    activo:       bool  # incluido según contrato del API
 
     class Config:
         from_attributes = True
@@ -84,6 +85,7 @@ class Plan:
             "nombre":       self.nombre,
             "monto":        self.monto,
             "duracionDias": self.duracion_dias,
+            "activo":       self.activo,  # campo requerido por el contrato
         }
 
     def to_delete_response(self) -> dict:
