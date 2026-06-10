@@ -176,15 +176,7 @@
   - Estado de la reserva: `CONFIRMADA`
   - `idReserva` generado automáticamente
 
-### ✅ Caso 2: Listar reservas de un cliente
-
-- **Precondición:** El cliente con idCliente=42 tiene reservas registradas (incluidas en el seed inicial).
-- **Acción:** `GET /api/reservas?idCliente=42`
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - Lista de reservas con idReserva, estado, fecha, idEntrenador e idCliente
-
-### ✅ Caso 3: Obtener reserva por ID
+### ✅ Caso 2: Obtener reserva por ID
 
 - **Precondición:** Existe la reserva con idReserva=1 (incluida en el seed inicial).
 - **Acción:** `GET /api/reservas/1`
@@ -192,26 +184,8 @@
   - HTTP 200 OK
   - Detalle completo de la reserva
 
-### ✅ Caso 4: Consultar capacidad del entrenador con reservas en esa fecha
 
-- **Precondición:** El entrenador con idEntrenador=10 tiene reservas confirmadas el 2026-03-20 (seed inicial).
-- **Acción:** `GET /api/reservas/capacidad?idEntrenador=10&fecha=2026-03-20`
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - `capacidadMaxima` visible en la respuesta (el cliente puede conocerla desde aquí)
-  - `reservasActuales` >= 1
-  - `lugaresDisponibles` = capacidadMaxima - reservasActuales
-
-### ✅ Caso 5: Consultar capacidad del entrenador sin reservas en esa fecha
-
-- **Precondición:** Ningún entrenador tiene reservas confirmadas el 2030-01-01.
-- **Acción:** `GET /api/reservas/capacidad?idEntrenador=1&fecha=2030-01-01`
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - `reservasActuales: 0`
-  - `lugaresDisponibles` igual a `capacidadMaxima`
-
-### ❌ Caso 6: Horario no disponible para el entrenador
+### ❌ Caso 3: Horario no disponible para el entrenador
 
 - **Precondición:** Ejecutar primero el Caso 1 para que el entrenador tenga una reserva confirmada el 2026-06-10T09:00:00.
 - **Acción:** `POST /api/reservas` con idCliente=100, idEntrenador=1, fecha="2026-06-10T09:00:00", idZona=2.
@@ -220,7 +194,7 @@
   - `error_code`: `RES_SCHEDULE_CONFLICT`
   - `message`: `"Horario no disponible"`
 
-### ❌ Caso 7: Conflicto de horario para el cliente
+### ❌ Caso 4: Conflicto de horario para el cliente
 
 - **Precondición:** El cliente con idCliente=42 tiene una reserva confirmada el 2026-03-20T15:00:00 (seed inicial).
 - **Acción:** `POST /api/reservas` con idCliente=42, idEntrenador=2, fecha="2026-03-20T15:00:00", idZona=1.
@@ -229,25 +203,7 @@
   - `error_code`: `RES_SCHEDULE_CONFLICT`
   - `message`: `"Horario no disponible"`
 
-### ❌ Caso 8: Capacidad máxima del entrenador alcanzada
-
-- **Precondición:** Consultar primero `GET /api/reservas/capacidad?idEntrenador=1&fecha=2026-07-01` para ver cuántos lugares quedan. Crear reservas con horas distintas en ese día hasta que `lugaresDisponibles` llegue a 0.
-- **Acción:** `POST /api/reservas` con una reserva adicional para el mismo entrenador y día.
-- **Resultado esperado:**
-  - HTTP 409 Conflict
-  - `error_code`: `RES_MAX_CAPACITY_REACHED`
-  - `message`: `"Capacidad máxima alcanzada"`
-
-### ❌ Caso 9: Sin reservas para el cliente
-
-- **Precondición:** El cliente con idCliente=9999 no tiene ninguna reserva registrada.
-- **Acción:** `GET /api/reservas?idCliente=9999`
-- **Resultado esperado:**
-  - HTTP 404 Not Found
-  - `error_code`: `RES_NOT_FOUND`
-  - `message`: `"Sin reservas"`
-
-### ❌ Caso 10: Reserva no encontrada por ID
+### ❌ Caso 5: Reserva no encontrada por ID
 
 - **Precondición:** No existe ninguna reserva con idReserva=9999.
 - **Acción:** `GET /api/reservas/9999`
