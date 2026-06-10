@@ -14,7 +14,7 @@ from app.api.ControlPermisos.ControlPermisos_api import router as control_permis
 from app.api.Cliente.PagoMensualidad_api import router as pagos_mesualidad_router
 from app.api.ControlPermisos.ControlPermisos_api import router as control_permisos_router  
 from app.api.Cliente.procesarplanes_api import router as procesar_planes_router
-
+from app.api.Pagos.ProcesarFactura_api import router as procesar_factura_router
 
 
 # Crear la aplicación con metadata para la documentación
@@ -35,6 +35,7 @@ app.include_router(gestion_horarios_router)
 app.include_router(control_permisos_router)
 app.include_router(pagos_mesualidad_router)
 app.include_router(procesar_planes_router)
+app.include_router(procesar_factura_router)
 
 
 # Ruta raíz — bienvenida
