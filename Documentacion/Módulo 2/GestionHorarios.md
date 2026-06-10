@@ -142,17 +142,8 @@
   - Disponibilidad visible para los clientes de inmediato
   - Días y horarios reflejados correctamente en la respuesta
 
-### ✅ Caso 2: Cancelación exitosa de horario disponible
 
-- **Precondición:** El horario existe y no tiene reservas confirmadas.
-- **Acción:** `DELETE /api/horarios/disponibilidad/15`
-- **Resultado esperado:**
-  - HTTP 200 OK
-  - Campo `success: true`
-  - `estado`: `CANCELADO`
-  - El horario deja de aparecer como disponible para los clientes
-
-### ❌ Caso 3: Rango horario inválido
+### ❌ Caso 2: Rango horario inválido
 
 - **Precondición:** El entrenador envía una hora de inicio mayor a la hora de fin.
 - **Acción:** `POST /api/horarios/disponibilidad` con horaInicio `"18:00"` y horaFin `"07:00"`.
@@ -161,30 +152,24 @@
   - `error_code`: `HOR_INVALID_TIME_RANGE`
   - Mensaje: `"Rango horario inválido"`
 
-### ❌ Caso 4: Bloqueo de horario con reserva activa
+### ✅ Caso 3: Obtener horario de un entrenador
 
-- **Precondición:** El horario que se intenta bloquear ya tiene una reserva confirmada.
-- **Acción:** `POST /api/horarios/bloquear` con fecha y hora de una reserva activa.
+- **Precondición:** Existe un horario registrado para el entrenador con idEntrenador=10 (incluido en el seed inicial).
+- **Acción:** `GET /api/horarios/10`
 - **Resultado esperado:**
-  - HTTP 409 Conflict
-  - `error_code`: `HOR_ACTIVE_BOOKING_EXISTS`
+  - HTTP 200 OK
+  - Campo `success: true`
+  - Detalle completo del horario con `diasDisponibles`, `horaInicio` y `horaFin`
 
-### ❌ Caso 5: Cancelación de horario con reservas activas
+### ❌ Caso 4: Entrenador sin horario registrado
 
-- **Precondición:** El horario tiene reservas confirmadas de clientes.
-- **Acción:** `DELETE /api/horarios/disponibilidad/15`
-- **Resultado esperado:**
-  - HTTP 409 Conflict
-  - `error_code`: `HOR_ACTIVE_BOOKING_EXISTS`
-  - Mensaje: `"Horario con reserva activa"`
-
-### ❌ Caso 6: Horario no encontrado al cancelar
-
-- **Precondición:** El idHorario no existe.
-- **Acción:** `DELETE /api/horarios/disponibilidad/999`
+- **Precondición:** No existe ningún horario para el entrenador con idEntrenador=999.
+- **Acción:** `GET /api/horarios/999`
 - **Resultado esperado:**
   - HTTP 404 Not Found
   - `error_code`: `HOR_NOT_FOUND`
+  - `message`: `"Horario no encontrado"`
+
 
 ## ✅ Definición de Hecho
 
