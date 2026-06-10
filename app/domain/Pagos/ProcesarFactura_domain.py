@@ -13,13 +13,12 @@ class FacturaCreate(BaseModel):
 
 
 class FacturaData(BaseModel):
-    idFactura:   str
-    idPago:      str
-    monto:       float
-    fecha:       str
-    plan:        str
+    idFactura:     str
+    idPago:        str
+    monto:         float
+    fecha:         str
+    plan:          str
     nombreCliente: str
-    urlDescarga: str   # Formato: /facturas/FAC-XXXXXX.pdf (referencia, no archivo real)
 
 
 class FacturaResponse(BaseModel):

@@ -4,36 +4,8 @@
 # ─────────────────────────────────────────────────────────────
 
 from typing import Optional
+from app.repository.Cliente.PagoMensualidad_repository import pago_mensualidad_repository
 
-
-# ── Simulación de pagos existentes en BD ─────────────────────
-
-_pagos_db: dict = {
-    "PAY-987654": {
-        "idPago":        "PAY-987654",
-        "idCliente":     42,
-        "estado":        "APROBADO",
-        "monto":         85000,
-        "plan":          "Plan Mensual Premium",
-        "nombreCliente": "Angela Torres",
-    },
-    "PAY-222222": {
-        "idPago":        "PAY-222222",
-        "idCliente":     42,
-        "estado":        "RECHAZADO",
-        "monto":         50000,
-        "plan":          "Plan Básico",
-        "nombreCliente": "Angela Torres",
-    },
-    "PAY-333333": {
-        "idPago":        "PAY-333333",
-        "idCliente":     15,
-        "estado":        "PENDIENTE",
-        "monto":         60000,
-        "plan":          "Plan Semestral",
-        "nombreCliente": "Carlos Ruiz",
-    },
-}
 
 # ── Facturas en memoria ───────────────────────────────────────
 
@@ -52,10 +24,24 @@ def _next_id() -> str:
 
 class ProcesarFacturaRepository:
 
-    # ── Pagos ─────────────────────────────────────────────────
+    # ── Pagos — lee directo del repositorio de PagoMensualidad ──
 
     def obtener_pago(self, id_pago: str) -> Optional[dict]:
-        return _pagos_db.get(id_pago)
+        """
+        Busca el pago en el repositorio real de PagoMensualidad.
+        Retorna un dict con los campos que necesita el service, o None.
+        """
+        pago = pago_mensualidad_repository.obtener_por_id(id_pago)
+        if not pago:
+            return None
+        return {
+            "idPago":        pago.id_pago,
+            "idCliente":     pago.id_cliente,
+            "estado":        pago.estado,
+            "monto":         pago.monto,
+            "plan":          f"Plan {pago.id_plan}",
+            "nombreCliente": f"Cliente {pago.id_cliente}",
+        }
 
     # ── Facturas ──────────────────────────────────────────────
 
@@ -79,12 +65,11 @@ class ProcesarFacturaRepository:
             "fecha":         fecha,
             "plan":          pago["plan"],
             "nombreCliente": pago["nombreCliente"],
-            "urlDescarga":   f"/facturas/{id_factura}.pdf",
         }
         _facturas_db[id_factura]        = factura
         _factura_x_pago[pago["idPago"]] = id_factura
         return factura
 
 
-# Singleton — nombre que espera el __init__.py
+# Singleton
 procesar_factura_repository = ProcesarFacturaRepository()
