@@ -176,7 +176,7 @@
   - Estado de la reserva: `CONFIRMADA`
   - `idReserva` generado automáticamente
 
-### ✅ Caso 3: Obtener reserva por ID
+### ✅ Caso 2: Obtener reserva por ID
 
 - **Precondición:** Existe la reserva con idReserva=1 (incluida en el seed inicial).
 - **Acción:** `GET /api/reservas/1`
@@ -185,7 +185,7 @@
   - Detalle completo de la reserva
 
 
-### ❌ Caso 6: Horario no disponible para el entrenador
+### ❌ Caso 3: Horario no disponible para el entrenador
 
 - **Precondición:** Ejecutar primero el Caso 1 para que el entrenador tenga una reserva confirmada el 2026-06-10T09:00:00.
 - **Acción:** `POST /api/reservas` con idCliente=100, idEntrenador=1, fecha="2026-06-10T09:00:00", idZona=2.
@@ -194,7 +194,7 @@
   - `error_code`: `RES_SCHEDULE_CONFLICT`
   - `message`: `"Horario no disponible"`
 
-### ❌ Caso 7: Conflicto de horario para el cliente
+### ❌ Caso 4: Conflicto de horario para el cliente
 
 - **Precondición:** El cliente con idCliente=42 tiene una reserva confirmada el 2026-03-20T15:00:00 (seed inicial).
 - **Acción:** `POST /api/reservas` con idCliente=42, idEntrenador=2, fecha="2026-03-20T15:00:00", idZona=1.
@@ -203,7 +203,7 @@
   - `error_code`: `RES_SCHEDULE_CONFLICT`
   - `message`: `"Horario no disponible"`
 
-### ❌ Caso 10: Reserva no encontrada por ID
+### ❌ Caso 5: Reserva no encontrada por ID
 
 - **Precondición:** No existe ninguna reserva con idReserva=9999.
 - **Acción:** `GET /api/reservas/9999`
