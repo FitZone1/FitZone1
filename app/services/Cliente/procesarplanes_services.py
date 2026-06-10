@@ -33,9 +33,16 @@ class ProcesarPlanesService:
         return PlanResponse(**plan.to_response())
 
     def dar_de_baja_plan(self, id_plan: int) -> PlanDeleteResponse:
-        plan = self.repo.dar_de_baja_plan(id_plan)
+        # REGLA: verificar existencia antes de cualquier otra cosa
+        plan = self.repo.obtener_plan_por_id(id_plan)
         if not plan:
             raise ValueError("PAY_PLAN_NOT_FOUND")
+
+        # REGLA DE NEGOCIO: no se puede dar de baja un plan con suscripciones activas
+        if self.repo.tiene_suscripciones_activas(id_plan):
+            raise ValueError("PAY_PLAN_HAS_ACTIVE_SUBSCRIPTIONS")
+
+        plan = self.repo.dar_de_baja_plan(id_plan)
         return PlanDeleteResponse(**plan.to_delete_response())
 
     # ── Suscripciones ─────────────────────────────────────────

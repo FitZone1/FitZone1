@@ -28,7 +28,7 @@ class PagoMensualidadService:
 
         # Regla de negocio: el plan debe existir y estar activo
         plan = self.planes_repo.obtener_plan_por_id(datos.idPlan)
-        if not plan:
+        if not plan or not plan.esta_activo():
             raise ValueError("PAY_PLAN_NOT_FOUND")
 
         fecha   = datetime.now().isoformat()
@@ -57,6 +57,14 @@ class PagoMensualidadService:
             metodo_pago    = datos.metodoPago,
             numero_tarjeta = datos.numeroTarjeta,
         )
+
+        # Regla de negocio: pago aprobado → suscribir/renovar el plan del cliente.
+        # Si ya tenía una suscripción activa, se reemplaza automáticamente.
+        self.planes_repo.crear_suscripcion(
+            id_cliente = datos.idCliente,
+            plan       = plan,
+        )
+
         return PagoMensualidadResponse(**pago.to_response())
 
     def obtener(self, id_pago: str) -> PagoMensualidadResponse:
