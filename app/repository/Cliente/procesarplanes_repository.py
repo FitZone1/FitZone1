@@ -64,6 +64,10 @@ class ProcesarPlanesRepository:
 
     # ── Suscripciones ─────────────────────────────────────────
 
+    def tiene_suscripciones_activas(self, id_plan: int) -> bool:
+        """Verifica si algún cliente tiene una suscripción activa al plan dado."""
+        return any(s.id_plan == id_plan for s in self._suscripciones)
+
     def obtener_suscripcion_activa(self, id_cliente: int) -> Optional[Suscripcion]:
         return next((s for s in self._suscripciones
                      if s.id_cliente == id_cliente), None)
