@@ -125,7 +125,34 @@
   - Campo `success: false`
   - `error_code`: `RES_TRAINERS_NOT_FOUND`
   - Mensaje: `"Sin resultados"`
+### ✅ Caso 4: Cambiar disponibilidad a false
 
+- **Precondición:** Existe el entrenador con idEntrenador=1 y su estado actual es `disponible: true`.
+- **Acción:** `PATCH /api/reservas/entrenadores/1/disponibilidad?disponible=false`
+- **Resultado esperado:**
+  - HTTP 200 OK
+  - Campo `success: true`
+  - Campo `disponible: false` en la respuesta
+
+### ✅ Caso 5: Cambiar disponibilidad a true
+
+- **Precondición:** Existe el entrenador con idEntrenador=3 y su estado actual es `disponible: false`.
+- **Acción:** `PATCH /api/reservas/entrenadores/3/disponibilidad?disponible=true`
+- **Resultado esperado:**
+  - HTTP 200 OK
+  - Campo `success: true`
+  - Campo `disponible: true` en la respuesta
+
+### ❌ Caso 6: Entrenador no encontrado al cambiar disponibilidad
+
+- **Precondición:** No existe ningún entrenador con idEntrenador=999.
+- **Acción:** `PATCH /api/reservas/entrenadores/999/disponibilidad?disponible=false`
+- **Resultado esperado:**
+  - HTTP 404 Not Found
+  - `error_code`: `RES_TRAINER_NOT_FOUND`
+  - `message`: `"Entrenador no encontrado"`
+
+  
 ## ✅ Definición de Hecho
 
 ### 📦 Alcance Funcional
