@@ -36,7 +36,7 @@ def _error(status_code: int, message: str, error_code: str, details: str):
 # ── CASO 1: Crear reserva ─────────────────────────────────────
 @router.post(
     "",
-    summary="Caso 1 – Crear una nueva reserva de sesión",
+    summary="Crear una nueva reserva de sesión",
     description="Crea una reserva con estado CONFIRMADA. Valida conflictos de horario y capacidad máxima del entrenador.",
     status_code=status.HTTP_201_CREATED,
     responses={
@@ -69,7 +69,7 @@ def crear_reserva(datos: ReservaSesionCreate):
 # ── CASO 3 y 4: Consultar capacidad del entrenador ────────────
 @router.get(
     "/capacidad",
-    summary="Casos 3 y 4 – Consultar capacidad del entrenador en una fecha",
+    summary="Consultar capacidad del entrenador en una fecha",
     description=(
         "Retorna cuántas reservas tiene el entrenador en la fecha indicada "
         "y cuántos lugares quedan disponibles. "
@@ -104,7 +104,7 @@ def consultar_capacidad(
 # ── CASO 2 y 8: Obtener reserva por ID ───────────────────────
 @router.get(
     "/{idReserva}",
-    summary="Casos 2 y 8 – Obtener detalle de una reserva por ID",
+    summary="Obtener detalle de una reserva por ID",
     description=(
         "Retorna el detalle completo de una reserva dado su ID. "
         "Si no existe, retorna HTTP 404 con `RES_ID_NOT_FOUND`."
