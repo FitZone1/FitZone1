@@ -34,10 +34,10 @@ def _error(status_code: int, message: str, error_code: str, details: str) -> JSO
     )
 
 
-# #── POST /api/pagos/facturas ──────────────────────────────────
-@router.post("/")
+# ── POST /api/pagos/facturas/ ─────────────────────────────────
+@router.post("/", summary="Generar Factura",
+             description="Genera una factura electrónica para un pago aprobado.")
 def generar_factura(datos: FacturaCreate):
-    """Genera una factura electrónica para un pago aprobado."""
     try:
         factura = service.generar_factura(datos)
         return JSONResponse(
@@ -51,8 +51,17 @@ def generar_factura(datos: FacturaCreate):
     except ValueError as e:
         msg = str(e)
         if msg == "PAY_PAYMENT_NOT_FOUND":
-            return _error(404, "Pago no encontrado", "PAY_PAYMENT_NOT_FOUND",
-                          "No existe un pago aprobado con el ID proporcionado")
+            return _error(404, "Pago no encontrado",
+                          "PAY_PAYMENT_NOT_FOUND",
+                          "No existe un pago con el ID proporcionado para este cliente")
+        if msg == "PAY_PAYMENT_NOT_APPROVED":
+            return _error(400, "Pago no aprobado",
+                          "PAY_PAYMENT_NOT_APPROVED",
+                          "El pago existe pero su estado no es APROBADO")
+        if msg == "FAC_ALREADY_EXISTS":
+            return _error(409, "Factura duplicada",
+                          "FAC_ALREADY_EXISTS",
+                          "Ya existe una factura generada para este pago")
         return _error(500, "Error interno", "PAY_INTERNAL_ERROR",
                       "Ocurrió un error inesperado al generar la factura")
     except Exception:
@@ -61,6 +70,8 @@ def generar_factura(datos: FacturaCreate):
 
 
 # ── Manejador de errores de validación (400) ──────────────────
+# IMPORTANTE: registrar en main.py con:
+#   app.add_exception_handler(RequestValidationError, validation_exception_handler)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     errores = [
         {"campo": ".".join(str(x) for x in e["loc"]), "mensaje": e["msg"]}
@@ -82,9 +93,9 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 
 # ── GET /api/pagos/facturas/{id_factura} ──────────────────────
-@router.get("/{id_factura}")
+@router.get("/{id_factura}", summary="Obtener Factura",
+            description="Consulta una factura existente por su ID.")
 def obtener_factura(id_factura: str):
-    """Consulta y descarga una factura existente por su ID."""
     try:
         factura = service.obtener_factura(id_factura)
         return JSONResponse(
@@ -96,5 +107,9 @@ def obtener_factura(id_factura: str):
             }
         )
     except ValueError:
-        return _error(404, "Factura no encontrada", "PAY_INVOICE_NOT_FOUND",
+        return _error(404, "Factura no encontrada",
+                      "PAY_INVOICE_NOT_FOUND",
                       "No existe una factura con el ID proporcionado")
+    except Exception:
+        return _error(500, "Error interno del servidor", "PAY_INTERNAL_ERROR",
+                      "Ocurrió un error inesperado. Intente más tarde.")

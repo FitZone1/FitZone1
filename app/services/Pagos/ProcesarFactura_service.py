@@ -17,12 +17,12 @@ class ProcesarFacturaService:
 
         # REGLA DE NEGOCIO: solo pagos APROBADOS generan factura
         if not pago.esta_aprobado():
-            raise ValueError("PAY_PAYMENT_NOT_FOUND")
+            raise ValueError("PAY_PAYMENT_NOT_APPROVED")
 
         # REGLA DE NEGOCIO: no generar factura duplicada para el mismo pago
         existente = self.repo.factura_ya_existe(datos.idPago)
         if existente:
-            return FacturaResponse(**existente.to_response())
+            raise ValueError("FAC_ALREADY_EXISTS")
 
         factura = self.repo.crear_factura(pago)
         return FacturaResponse(**factura.to_response())
