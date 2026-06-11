@@ -2,7 +2,7 @@ from fastapi import APIRouter, Path, status
 from fastapi.responses import JSONResponse
 from datetime import datetime, timezone
 from app.domain.Cliente.AdministrarPerfilCliente_domain import PerfilClienteUpdate, ObjetivosCreate
-from app.repository.Cliente.AdministrarPerfilCliente_repository import administrar_perfil_cliente_repository
+from app.repository.Cliente.cliente_repositories import cliente_repository
 from app.services.Cliente.AdministrarPerfilCliente_services import AdministrarPerfilClienteService
 
 router = APIRouter(
@@ -10,7 +10,7 @@ router = APIRouter(
     tags=["Administrar Perfil Cliente"],
 )
 
-service = AdministrarPerfilClienteService(repo=administrar_perfil_cliente_repository)
+service = AdministrarPerfilClienteService(repo=cliente_repository)
 
 
 def _ts() -> str:
@@ -33,9 +33,9 @@ def _error(status_code: int, message: str, error_code: str, details: str):
     )
 
 
-# ── GET /api/perfiles/{idCliente} ─────────────────────────────
+# ── GET /api/perfiles/{idUsuario} ─────────────────────────────
 @router.get(
-    "/{idCliente}",
+    "/{idUsuario}",
     summary="Ver perfil del cliente",
     description="Retorna los datos del perfil del cliente.",
     responses={
@@ -44,10 +44,10 @@ def _error(status_code: int, message: str, error_code: str, details: str):
     },
 )
 def ver_perfil(
-    idCliente: int = Path(..., gt=0, description="ID del cliente"),
+    idUsuario: int = Path(..., gt=0, description="ID del cliente"),
 ):
     try:
-        perfil = service.ver_perfil(idCliente)
+        perfil = service.ver_perfil(idUsuario)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
@@ -61,9 +61,9 @@ def ver_perfil(
                       "No existe un cliente con el ID proporcionado")
 
 
-# ── PUT /api/perfiles/cliente/{idCliente} ─────────────────────
+# ── PUT /api/perfiles/cliente/{idUsuario} ─────────────────────
 @router.put(
-    "/cliente/{idCliente}",
+    "/cliente/{idUsuario}",
     summary="Actualizar perfil del cliente",
     description="Actualiza nombre, teléfono, objetivos y peso actual del cliente.",
     responses={
@@ -72,11 +72,11 @@ def ver_perfil(
     },
 )
 def actualizar_perfil(
-    idCliente: int = Path(..., gt=0, description="ID del cliente"),
+    idUsuario: int = Path(..., gt=0, description="ID del cliente"),
     datos: PerfilClienteUpdate = ...,
 ):
     try:
-        perfil = service.actualizar_perfil(idCliente, datos)
+        perfil = service.actualizar_perfil(idUsuario, datos)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
             content={
@@ -90,9 +90,9 @@ def actualizar_perfil(
                       "No existe un cliente con el ID proporcionado")
 
 
-# ── POST /api/perfiles/{idCliente}/objetivos ──────────────────
+# ── POST /api/perfiles/{idUsuario}/objetivos ──────────────────
 @router.post(
-    "/{idCliente}/objetivos",
+    "/{idUsuario}/objetivos",
     summary="Registrar objetivos del cliente",
     description="Registra los objetivos de entrenamiento, peso meta y plazo en meses del cliente.",
     status_code=status.HTTP_201_CREATED,
@@ -102,11 +102,11 @@ def actualizar_perfil(
     },
 )
 def registrar_objetivos(
-    idCliente: int = Path(..., gt=0, description="ID del cliente"),
+    idUsuario: int = Path(..., gt=0, description="ID del cliente"),
     datos: ObjetivosCreate = ...,
 ):
     try:
-        objetivos = service.registrar_objetivos(idCliente, datos)
+        objetivos = service.registrar_objetivos(idUsuario, datos)
         return JSONResponse(
             status_code=status.HTTP_201_CREATED,
             content={

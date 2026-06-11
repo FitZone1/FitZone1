@@ -18,8 +18,10 @@ class ObjetivosCreate(BaseModel):
 
 # ── Schema de SALIDA ──────────────────────────────────────────
 class PerfilClienteResponse(BaseModel):
-    idCliente:  int
+    idUsuario:  int
     nombre:     str
+    correo:     str
+    telefono:   str
     objetivos:  str
     pesoActual: float
 
@@ -28,7 +30,7 @@ class PerfilClienteResponse(BaseModel):
 
 
 class ObjetivosResponse(BaseModel):
-    idCliente:  int
+    idUsuario:  int
     objetivos:  str
     pesoMeta:   float
     plazoMeses: int
@@ -39,10 +41,10 @@ class ObjetivosResponse(BaseModel):
 
 # ── Modelo interno del dominio ────────────────────────────────
 class PerfilCliente:
-    def __init__(self, id_cliente: int, nombre: str, telefono: str,
+    def __init__(self, id_usuario: int, nombre: str, telefono: str,
                  objetivos: str, peso_actual: float,
                  peso_meta: float = 0.0, plazo_meses: int = 0):
-        self.id_cliente  = id_cliente
+        self.id_usuario  = id_usuario
         self.nombre      = nombre
         self.telefono    = telefono
         self.objetivos   = objetivos
@@ -52,7 +54,7 @@ class PerfilCliente:
 
     def to_response(self) -> dict:
         return {
-            "idCliente":  self.id_cliente,
+            "idUsuario":  self.id_usuario,
             "nombre":     self.nombre,
             "objetivos":  self.objetivos,
             "pesoActual": self.peso_actual,
@@ -60,7 +62,7 @@ class PerfilCliente:
 
     def to_objetivos_response(self) -> dict:
         return {
-            "idCliente":  self.id_cliente,
+            "idUsuario":  self.id_usuario,
             "objetivos":  self.objetivos,
             "pesoMeta":   self.peso_meta,
             "plazoMeses": self.plazo_meses,

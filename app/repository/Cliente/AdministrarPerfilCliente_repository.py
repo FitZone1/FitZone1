@@ -16,12 +16,12 @@ class AdministrarPerfilClienteRepository:
         ]
         self._datos = iniciales
 
-    def obtener_por_id(self, id_cliente: int) -> Optional[PerfilCliente]:
-        return next((p for p in self._datos if p.id_cliente == id_cliente), None)
+    def obtener_por_id(self, id_usuario: int) -> Optional[PerfilCliente]:
+        return next((p for p in self._datos if p.id_usuario == id_usuario), None)
 
-    def actualizar(self, id_cliente: int, nombre: str, telefono: str,
+    def actualizar(self, id_usuario: int, nombre: str, telefono: str,
                    objetivos: str, peso_actual: float) -> Optional[PerfilCliente]:
-        perfil = self.obtener_por_id(id_cliente)
+        perfil = self.obtener_por_id(id_usuario)
         if not perfil:
             return None
         perfil.nombre      = nombre
@@ -30,9 +30,9 @@ class AdministrarPerfilClienteRepository:
         perfil.peso_actual = peso_actual
         return perfil
 
-    def registrar_objetivos(self, id_cliente: int, objetivos: str,
+    def registrar_objetivos(self, id_usuario: int, objetivos: str,
                             peso_meta: float, plazo_meses: int) -> Optional[PerfilCliente]:
-        perfil = self.obtener_por_id(id_cliente)
+        perfil = self.obtener_por_id(id_usuario)
         if not perfil:
             return None
         perfil.objetivos   = objetivos

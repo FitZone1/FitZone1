@@ -2,39 +2,49 @@ from app.domain.Cliente.AdministrarPerfilCliente_domain import (
     PerfilClienteUpdate, ObjetivosCreate,
     PerfilClienteResponse, ObjetivosResponse
 )
-from app.repository.Cliente.AdministrarPerfilCliente_repository import AdministrarPerfilClienteRepository
+from app.repository.Cliente.cliente_repositories import ClienteRepository
 
 
 class AdministrarPerfilClienteService:
 
-    def __init__(self, repo: AdministrarPerfilClienteRepository):
+    def __init__(self, repo: ClienteRepository):
         self.repo = repo
 
-    def ver_perfil(self, id_cliente: int) -> PerfilClienteResponse:
-        perfil = self.repo.obtener_por_id(id_cliente)
-        if not perfil:
+    def ver_perfil(self, id_usuario: int) -> PerfilClienteResponse:
+        cliente = self.repo.obtener_por_id(id_usuario)
+        if not cliente:
             raise ValueError("PROF_CLIENT_NOT_FOUND")
-        return PerfilClienteResponse(**perfil.to_response())
-
-    def actualizar_perfil(self, id_cliente: int, datos: PerfilClienteUpdate) -> PerfilClienteResponse:
-        perfil = self.repo.actualizar(
-            id_cliente  = id_cliente,
-            nombre      = datos.nombre,
-            telefono    = datos.telefono,
-            objetivos   = datos.objetivos,
-            peso_actual = datos.pesoActual,
+        return PerfilClienteResponse(
+            idUsuario  = cliente.id,
+            nombre     = cliente.nombre,
+            correo     = cliente.correo,
+            telefono   = cliente.telefono,
+            objetivos  = "",
+            pesoActual = 0.0,
         )
-        if not perfil:
-            raise ValueError("PROF_CLIENT_NOT_FOUND")
-        return PerfilClienteResponse(**perfil.to_response())
 
-    def registrar_objetivos(self, id_cliente: int, datos: ObjetivosCreate) -> ObjetivosResponse:
-        perfil = self.repo.registrar_objetivos(
-            id_cliente  = id_cliente,
-            objetivos   = datos.objetivos,
-            peso_meta   = datos.pesoMeta,
-            plazo_meses = datos.plazoMeses,
-        )
-        if not perfil:
+    def actualizar_perfil(self, id_usuario: int, datos: PerfilClienteUpdate) -> PerfilClienteResponse:
+        cliente = self.repo.obtener_por_id(id_usuario)
+        if not cliente:
             raise ValueError("PROF_CLIENT_NOT_FOUND")
-        return ObjetivosResponse(**perfil.to_objetivos_response())
+        cliente.nombre   = datos.nombre
+        cliente.telefono = datos.telefono
+        return PerfilClienteResponse(
+            idUsuario  = cliente.id,
+            nombre     = cliente.nombre,
+            correo     = cliente.correo,
+            telefono   = cliente.telefono,
+            objetivos  = datos.objetivos,
+            pesoActual = datos.pesoActual,
+        )
+
+    def registrar_objetivos(self, id_usuario: int, datos: ObjetivosCreate) -> ObjetivosResponse:
+        cliente = self.repo.obtener_por_id(id_usuario)
+        if not cliente:
+            raise ValueError("PROF_CLIENT_NOT_FOUND")
+        return ObjetivosResponse(
+            idUsuario  = cliente.id,
+            objetivos  = datos.objetivos,
+            pesoMeta   = datos.pesoMeta,
+            plazoMeses = datos.plazoMeses,
+        )
