@@ -124,17 +124,7 @@
   - Campo `success: true`
   - Datos completos de la factura en JSON: idFactura, idPago, monto, fecha, plan, nombreCliente
 
-### ✅ Caso 3: Factura duplicada — retorna la existente
-
-- **Precondición:** Ya existe una factura generada para el pago `PAY-987654`.
-- **Acción:** `POST /api/pagos/facturas` con el mismo `idPago: "PAY-987654"` e `idCliente: 42`.
-- **Resultado esperado:**
-  - HTTP 201 Created
-  - Campo `success: true`
-  - Se retorna la misma factura ya existente (mismo `idFactura`)
-  - No se crea un registro duplicado en el sistema
-
-### ❌ Caso 4: Pago no encontrado
+### ❌ Caso 3 Pago no encontrado
 
 - **Precondición:** El idPago enviado no existe en el sistema.
 - **Acción:** `POST /api/pagos/facturas` con `idPago: "PAY-999999"` e `idCliente: 42`.
@@ -144,7 +134,7 @@
   - `error_code`: `PAY_PAYMENT_NOT_FOUND`
   - Mensaje: `"Pago no encontrado"`
 
-### ❌ Caso 5: Pago no aprobado (estado RECHAZADO o PENDIENTE)
+### ❌ Caso 4: Pago no aprobado (estado RECHAZADO o PENDIENTE)
 
 - **Precondición:** El idPago existe pero su estado no es APROBADO.
 - **Acción:** `POST /api/pagos/facturas` con `idPago: "PAY-222222"` (RECHAZADO) o `idPago: "PAY-333333"` (PENDIENTE).
@@ -154,7 +144,7 @@
   - `error_code`: `PAY_PAYMENT_NOT_FOUND`
   - Mensaje: `"Pago no encontrado"`
 
-### ❌ Caso 6: idCliente no coincide con el pago
+### ❌ Caso 5: idCliente no coincide con el pago
 
 - **Precondición:** El idPago existe y está aprobado, pero pertenece a otro cliente.
 - **Acción:** `POST /api/pagos/facturas` con `idPago: "PAY-987654"` e `idCliente: 99` (cliente incorrecto).
@@ -164,7 +154,7 @@
   - `error_code`: `PAY_PAYMENT_NOT_FOUND`
   - Mensaje: `"Pago no encontrado"`
 
-### ❌ Caso 7: Factura no encontrada al consultar
+### ❌ Caso 6: Factura no encontrada al consultar
 
 - **Precondición:** El idFactura enviado no existe en el sistema.
 - **Acción:** `GET /api/pagos/facturas/FAC-999999`
