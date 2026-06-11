@@ -18,6 +18,7 @@ from app.api.Pagos.ProcesarFactura_api import router as procesar_factura_router
 
 from app.api.Pagos.ProcesarFactura_api import router as procesar_facturas_router
 from app.api.Entrenador.CargarRutina_api import router as cargar_rutina_router
+from app.api.Cliente.AdministrarPerfilCliente_api import router as perfil_cliente_router
 
 
 # Crear la aplicación con metadata para la documentación
@@ -39,6 +40,7 @@ app.include_router(control_permisos_router)
 app.include_router(pagos_mesualidad_router)
 app.include_router(procesar_planes_router)
 app.include_router(procesar_factura_router)
+app.include_router(perfil_cliente_router)
 
 
 # Ruta raíz — bienvenida

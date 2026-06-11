@@ -3,13 +3,15 @@
 ### 📖 Historia de usuario
 
 **Como** Cliente del gimnasio
-**Quiero** Crear y mantener actualizado mi perfil con mis datos personales, objetivos de entrenamiento y foto
+**Quiero** Ver y mantener actualizado mi perfil con mis datos personales y objetivos de entrenamiento
 **Para** Que el entrenador conozca mi información antes de cada sesión y pueda personalizar mejor el entrenamiento
 
 ## 🔁 Flujo esperado
 
 - El cliente accede a la sección "Mi perfil" en la plataforma.
-- El sistema consume el endpoint `PUT /api/perfiles/cliente/42` con los datos actualizados.
+- El sistema consume el endpoint `GET /api/perfiles/{idUsuario}` para ver los datos actuales.
+- El cliente puede actualizar su nombre y teléfono con `PUT /api/perfiles/cliente/{idUsuario}`.
+- El cliente puede registrar sus objetivos de entrenamiento con `POST /api/perfiles/{idUsuario}/objetivos`.
 - El backend valida que el cliente exista y actualiza la información.
 - Los cambios quedan guardados y visibles para el entrenador asignado.
 
@@ -17,12 +19,29 @@
 
 ### 1. 🔍 Estructura y lógica del servicio
 
-- [ ] Se expone un endpoint `PUT /api/perfiles/cliente/{idCliente}` que recibe nombre, teléfono, objetivos y pesoActual.
-- [ ] Se expone un endpoint `PATCH /api/perfiles/42/foto` para actualizar la foto de perfil.
-- [ ] Se expone un endpoint `POST /api/perfiles/42/objetivos` para registrar objetivos y peso meta.
+- [ ] Se expone un endpoint `GET /api/perfiles/{idUsuario}` para ver el perfil del cliente.
+- [ ] Se expone un endpoint `PUT /api/perfiles/cliente/{idUsuario}` que recibe nombre y teléfono.
+- [ ] Se expone un endpoint `POST /api/perfiles/{idUsuario}/objetivos` para registrar objetivos, pesoMeta y plazoMeses.
 - [ ] Solo el cliente autenticado puede modificar su propio perfil.
 
 ### 2. 📆 Estructura de la información
+
+- [ ] Se responde con la siguiente estructura en JSON al ver el perfil:
+
+```json
+{
+  "success": true,
+  "message": "Perfil obtenido correctamente",
+  "data": {
+    "idUsuario": 1,
+    "nombre": "Juan Pérez",
+    "correo": "juan@fitzone.com",
+    "telefono": "3001234567",
+    "objetivos": "",
+    "pesoActual": 0.0
+  }
+}
+```
 
 - [ ] Se responde con la siguiente estructura en JSON al actualizar el perfil:
 
@@ -31,10 +50,27 @@
   "success": true,
   "message": "Perfil actualizado correctamente",
   "data": {
-    "idCliente": 15,
-    "nombre": "Angela Shilel",
+    "idUsuario": 1,
+    "nombre": "Juan Pérez",
+    "correo": "juan@fitzone.com",
+    "telefono": "3001234567",
     "objetivos": "Bajar de peso y ganar masa muscular",
     "pesoActual": 68.5
+  }
+}
+```
+
+- [ ] Se responde con la siguiente estructura en JSON al registrar objetivos:
+
+```json
+{
+  "success": true,
+  "message": "Objetivos registrados correctamente",
+  "data": {
+    "idUsuario": 1,
+    "objetivos": "Bajar de peso y ganar masa muscular",
+    "pesoMeta": 65.0,
+    "plazoMeses": 6
   }
 }
 ```
@@ -56,37 +92,24 @@
 
 ## 🔧 Notas Técnicas
 
-- **Método HTTP:** `PUT` para actualizar perfil / `PATCH` para foto / `POST` para objetivos
-- **Ruta perfil:** `/api/perfiles/cliente/{idCliente}`
-- **Ruta foto:** `/api/perfiles/42/foto`
-- **Ruta objetivos:** `/api/perfiles/42/objetivos`
+- **Método HTTP:** `GET` para ver perfil / `PUT` para actualizar perfil / `POST` para objetivos
+- **Ruta ver perfil:** `/api/perfiles/{idUsuario}`
+- **Ruta actualizar perfil:** `/api/perfiles/cliente/{idUsuario}`
+- **Ruta objetivos:** `/api/perfiles/{idUsuario}/objetivos`
 
 ## 📤 Ejemplo de Respuesta JSON
 
 ```json
 {
   "success": true,
-  "message": "Perfil actualizado correctamente",
+  "message": "Perfil obtenido correctamente",
   "data": {
-    "idCliente": 15,
-    "nombre": "Angela Shilel",
-    "objetivos": "Bajar de peso y ganar masa muscular",
-    "pesoActual": 68.5
-  }
-}
-```
-
-- [ ] Si el formato de la foto no es permitido, el backend retorna:
-
-```json
-{
-  "success": false,
-  "statusCode": 400,
-  "message": "Formato no permitido",
-  "error": {
-    "error_code": "PROF_INVALID_IMAGE_FORMAT",
-    "details": "Solo se permiten imágenes en formato JPG o PNG",
-    "timestamp": "2026-03-18T10:30:00"
+    "idUsuario": 1,
+    "nombre": "Juan Pérez",
+    "correo": "juan@fitzone.com",
+    "telefono": "3001234567",
+    "objetivos": "",
+    "pesoActual": 0.0
   }
 }
 ```
@@ -95,51 +118,48 @@
 
 ### Casos de prueba funcional
 
-### ✅ Caso 1: Actualización exitosa del perfil
+### ✅ Caso 1: Ver perfil del cliente
 
-- **Precondición:** El cliente está autenticado y tiene perfil registrado.
-- **Acción:** `PUT /api/perfiles/cliente/42` con nombre, teléfono, objetivos y pesoActual válidos.
+- **Precondición:** Existe el cliente con idUsuario=1 (incluido en el seed inicial).
+- **Acción:** `GET /api/perfiles/1`
+- **Resultado esperado:**
+  - HTTP 200 OK
+  - Campo `success: true`
+  - Datos del perfil: `idUsuario`, `nombre`, `correo`, `telefono`
+
+### ✅ Caso 2: Actualización exitosa del perfil
+
+- **Precondición:** Existe el cliente con idUsuario=1 (incluido en el seed inicial).
+- **Acción:** `PUT /api/perfiles/cliente/1` con nombre y teléfono válidos.
 - **Resultado esperado:**
   - HTTP 200 OK
   - Campo `success: true`
   - Datos actualizados reflejados en la respuesta
-  - Información visible para el entrenador asignado
 
-### ✅ Caso 2: Registro exitoso de objetivos
+### ✅ Caso 3: Registro exitoso de objetivos
 
-- **Precondición:** El cliente está autenticado y envía objetivos con plazo válido.
-- **Acción:** `POST /api/perfiles/42/objetivos` con objetivos, pesoMeta y plazoMeses válidos.
+- **Precondición:** Existe el cliente con idUsuario=1 (incluido en el seed inicial).
+- **Acción:** `POST /api/perfiles/1/objetivos` con objetivos, pesoMeta y plazoMeses válidos.
 - **Resultado esperado:**
   - HTTP 201 Created
   - Campo `success: true`
   - Objetivos registrados correctamente con pesoMeta y plazoMeses
 
-### ❌ Caso 3: Cliente no encontrado
+### ❌ Caso 4: Cliente no encontrado
 
-- **Precondición:** El idCliente enviado no existe en la base de datos.
-- **Acción:** `PUT /api/perfiles/cliente/999` con id inexistente.
+- **Precondición:** No existe ningún cliente con idUsuario=999.
+- **Acción:** `GET /api/perfiles/999`
 - **Resultado esperado:**
   - HTTP 404 Not Found
-  - Campo `success: false`
   - `error_code`: `PROF_CLIENT_NOT_FOUND`
-  - Mensaje: `"Cliente no encontrado"`
-
-### ❌ Caso 4: Formato de foto no permitido
-
-- **Precondición:** El cliente intenta subir una imagen en formato no permitido.
-- **Acción:** `PATCH /api/perfiles/42/foto` con imagen en formato GIF.
-- **Resultado esperado:**
-  - HTTP 400 Bad Request
-  - Campo `success: false`
-  - `error_code`: `PROF_INVALID_IMAGE_FORMAT`
-  - Mensaje: `"Formato no permitido"`
+  - `message`: `"Cliente no encontrado"`
 
 ## ✅ Definición de Hecho
 
 ### 📦 Alcance Funcional
 
+- [ ] El perfil del cliente se obtiene correctamente con nombre, correo y teléfono.
 - [ ] Los datos del perfil se actualizan correctamente y son visibles para el entrenador.
-- [ ] La foto de perfil se valida por formato antes de guardar.
 - [ ] Los objetivos se registran correctamente con pesoMeta y plazoMeses.
 - [ ] La respuesta JSON cumple con el contrato definido.
 
@@ -158,5 +178,6 @@
 
 - [ ] Se devuelve código HTTP 400 para parámetros inválidos.
 - [ ] Se devuelve código HTTP 401/403 para acceso no autorizado.
+- [ ] Se devuelve código HTTP 404 cuando el cliente no existe.
 - [ ] Se devuelve código HTTP 500/503 ante fallos internos.
-- [ ] El campo `mensaje` incluye texto descriptivo y amigable.
+- [ ] El campo `message` incluye texto descriptivo y amigable.
