@@ -8,7 +8,7 @@
 
 ## 🔁 Flujo esperado
 
-- El sistema genera la factura electrónica automáticamente tras cada pago exitoso.
+- El  sistema genera la factura electrónica automáticamente tras cada pago exitoso.
 - El cliente accede a la sección de facturas en su panel.
 - El sistema consume el endpoint `POST /api/pagos/facturas` con idPago e idCliente.
 - El backend valida que exista un pago aprobado con el ID proporcionado y que pertenezca al cliente.
