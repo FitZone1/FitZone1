@@ -95,44 +95,41 @@
 
 ### Casos de prueba funcional
 
-### ✅ Caso 1: Actualización exitosa del perfil
+### ✅ Caso 1: Ver perfil del cliente
 
-- **Precondición:** El cliente está autenticado y tiene perfil registrado.
+- **Precondición:** Existe el cliente con idCliente=42 (incluido en el seed inicial).
+- **Acción:** `GET /api/perfiles/42`
+- **Resultado esperado:**
+  - HTTP 200 OK
+  - Campo `success: true`
+  - Datos del perfil del cliente en la respuesta
+
+### ✅ Caso 2: Actualización exitosa del perfil
+
+- **Precondición:** Existe el cliente con idCliente=42 (incluido en el seed inicial).
 - **Acción:** `PUT /api/perfiles/cliente/42` con nombre, teléfono, objetivos y pesoActual válidos.
 - **Resultado esperado:**
   - HTTP 200 OK
   - Campo `success: true`
   - Datos actualizados reflejados en la respuesta
-  - Información visible para el entrenador asignado
 
-### ✅ Caso 2: Registro exitoso de objetivos
+### ✅ Caso 3: Registro exitoso de objetivos
 
-- **Precondición:** El cliente está autenticado y envía objetivos con plazo válido.
+- **Precondición:** Existe el cliente con idCliente=42 (incluido en el seed inicial).
 - **Acción:** `POST /api/perfiles/42/objetivos` con objetivos, pesoMeta y plazoMeses válidos.
 - **Resultado esperado:**
   - HTTP 201 Created
   - Campo `success: true`
   - Objetivos registrados correctamente con pesoMeta y plazoMeses
 
-### ❌ Caso 3: Cliente no encontrado
+### ❌ Caso 4: Cliente no encontrado
 
-- **Precondición:** El idCliente enviado no existe en la base de datos.
-- **Acción:** `PUT /api/perfiles/cliente/999` con id inexistente.
+- **Precondición:** No existe ningún cliente con idCliente=999.
+- **Acción:** `GET /api/perfiles/999`
 - **Resultado esperado:**
   - HTTP 404 Not Found
-  - Campo `success: false`
   - `error_code`: `PROF_CLIENT_NOT_FOUND`
-  - Mensaje: `"Cliente no encontrado"`
-
-### ❌ Caso 4: Formato de foto no permitido
-
-- **Precondición:** El cliente intenta subir una imagen en formato no permitido.
-- **Acción:** `PATCH /api/perfiles/42/foto` con imagen en formato GIF.
-- **Resultado esperado:**
-  - HTTP 400 Bad Request
-  - Campo `success: false`
-  - `error_code`: `PROF_INVALID_IMAGE_FORMAT`
-  - Mensaje: `"Formato no permitido"`
+  - `message`: `"Cliente no encontrado"`
 
 ## ✅ Definición de Hecho
 
